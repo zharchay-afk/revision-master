@@ -690,6 +690,16 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+/* Config Firebase par défaut — injectée automatiquement */
+(function(){
+  try {
+    if (!localStorage.getItem('fb_config')) {
+      localStorage.setItem('fb_config', '{"apiKey":"AIzaSyB8uJ-tFlBS7ffekK-q-CEAcvC2BFKO1io","authDomain":"revision-master-7787.firebaseapp.com","projectId":"revision-master-7787","storageBucket":"revision-master-7787.firebasestorage.app","messagingSenderId":"189729122648","appId":"1:189729122648:web:d80835226fbc32aa219d2d"}');
+    }
+  } catch(e){}
+})();
+</script>
+<script>
 /* ============================================================
    FOXLEARN — MOTEUR JAVASCRIPT
    ============================================================ */
