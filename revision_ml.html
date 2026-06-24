@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Révision ML — Team 7</title>
+<style>
+:root {
+  --primary: #1F3864;
+  --accent: #2E74B5;
+  --success: #548235;
+  --warning: #BF8F00;
+  --danger: #C00000;
+  --bg: #F5F7FA;
+  --card: #FFFFFF;
+  --text: #2D3748;
+  --muted: #718096;
+  --border: #E2E8F0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+}
+header {
+  background: var(--primary); color: white; padding: 1rem 2rem;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.header-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.logo { font-size: 1.3rem; font-weight: bold; }
+.logo span { font-size: 0.85rem; opacity: 0.85; font-weight: normal; }
+.countdown { background: rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+.countdown strong { font-size: 1.2rem; color: #FFD700; }
+.lang-toggle { display: flex; gap: 0.4rem; }
+.lang-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+.lang-btn.active { background: white; color: var(--primary); }
+.lang-btn:hover:not(.active) { background: rgba(255,255,255,0.2); }
+main {
+  max-width: 1400px; margin: 0 auto; display: grid;
+  grid-template-columns: 280px 1fr; gap: 2rem; padding: 2rem;
+}
+.sidebar {
+  background: var(--card); border-radius: 12px; padding: 1.5rem;
+  height: fit-content; position: sticky; top: 100px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.progress-overall { margin-bottom: 1.5rem; }
+.progress-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem; }
+.progress-bar { width: 100%; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); transition: width 0.5s ease; }
+.progress-text { font-size: 0.85rem; margin-top: 0.4rem; color: var(--primary); font-weight: 600; }
+.nav-list { list-style: none; }
+.nav-item { padding: 0.6rem 0.8rem; margin: 0.2rem 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; transition: background 0.2s; border-left: 3px solid transparent; }
+.nav-item:hover { background: var(--bg); }
+.nav-item.active { background: #EAF3FF; border-left-color: var(--accent); color: var(--primary); font-weight: 600; }
+.nav-item .check { width: 18px; height: 18px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: white; flex-shrink: 0; }
+.nav-item.done .check { background: var(--success); }
+.nav-item.priority { color: var(--danger); }
+.content { background: var(--card); border-radius: 12px; padding: 2.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 600px; }
+.content h1 { color: var(--primary); margin-bottom: 0.5rem; font-size: 1.8rem; }
+.content .subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+.content h2 { color: var(--accent); margin-top: 2rem; margin-bottom: 0.8rem; font-size: 1.3rem; border-bottom: 2px solid var(--border); padding-bottom: 0.4rem; }
+.content h3 { color: var(--primary); margin-top: 1.5rem; margin-bottom: 0.6rem; font-size: 1.1rem; }
+.content p { margin-bottom: 1rem; }
+.content ul { margin-left: 1.5rem; margin-bottom: 1rem; }
+.content li { margin-bottom: 0.4rem; }
+.zoom-box {
+  background: #EAF3FF; border-left: 4px solid var(--primary);
+  padding: 1.2rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0;
+}
+.zoom-box .zoom-title { color: var(--primary); font-weight: bold; margin-bottom: 0.6rem; font-size: 0.95rem; }
+.tip-box { background: #FFF2CC; border-left: 4px solid var(--warning); padding: 1.2rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+.tip-box .tip-title { color: var(--warning); font-weight: bold; margin-bottom: 0.6rem; font-size: 0.95rem; }
+.warning-box { background: #FBE9E7; border-left: 4px solid var(--danger); padding: 1.2rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+.warning-box .warn-title { color: var(--danger); font-weight: bold; margin-bottom: 0.6rem; font-size: 0.95rem; }
+.formula { background: #F7FAFC; border: 1px dashed var(--border); padding: 1rem; margin: 1rem 0; font-family: "Consolas", "Monaco", monospace; font-size: 0.95rem; text-align: center; border-radius: 6px; }
+.example-box { background: #F0FFF4; border-left: 4px solid var(--success); padding: 1.2rem 1.5rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+.example-box .ex-title { color: var(--success); font-weight: bold; margin-bottom: 0.6rem; font-size: 0.95rem; }
+.mark-done-btn {
+  background: var(--success); color: white; border: none; padding: 0.7rem 1.5rem;
+  border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 600;
+  margin-top: 2rem; transition: all 0.2s;
+}
+.mark-done-btn:hover { background: #6FA049; transform: translateY(-1px); }
+.mark-done-btn.done { background: var(--muted); cursor: default; }
+.mark-done-btn.done:hover { transform: none; }
+.quiz-container { }
+.quiz-question { background: var(--bg); padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem; }
+.quiz-question .q-text { font-weight: 600; margin-bottom: 1rem; color: var(--primary); }
+.quiz-options { display: grid; gap: 0.5rem; }
+.quiz-option {
+  background: var(--card); border: 2px solid var(--border); padding: 0.8rem 1rem;
+  border-radius: 8px; cursor: pointer; transition: all 0.2s; text-align: left; font-size: 0.95rem;
+}
+.quiz-option:hover { border-color: var(--accent); }
+.quiz-option.selected { border-color: var(--accent); background: #EAF3FF; }
+.quiz-option.correct { border-color: var(--success); background: #F0FFF4; }
+.quiz-option.wrong { border-color: var(--danger); background: #FBE9E7; }
+.quiz-explanation { background: white; padding: 1rem; border-radius: 6px; margin-top: 1rem; border-left: 3px solid var(--accent); font-size: 0.9rem; display: none; }
+.quiz-explanation.visible { display: block; }
+.quiz-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+.btn { padding: 0.7rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--primary); }
+.btn-secondary { background: var(--border); color: var(--text); }
+.quiz-score { font-size: 1.1rem; font-weight: 600; color: var(--primary); }
+.quiz-filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.filter-btn { padding: 0.4rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+.filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.exam-config { background: var(--bg); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.exam-config label { font-size: 0.85rem; color: var(--muted); }
+.exam-config input { padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 2rem 0; }
+.stat-card { background: var(--bg); padding: 1.2rem; border-radius: 10px; text-align: center; }
+.stat-num { font-size: 2rem; font-weight: bold; color: var(--accent); }
+.stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 0.3rem; }
+.priority-tag { background: var(--danger); color: white; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 4px; margin-left: 0.4rem; font-weight: 600; }
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">📚 Révision ML — Team 7 <span>· Master 2 Data Science · UTBM</span></div>
+    <div class="countdown" id="countdown">⏳ <span data-i18n="remaining">Temps restant :</span> <strong id="cd-val">...</strong></div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="fr" onclick="setLang('fr')">FR</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <aside class="sidebar">
+    <div class="progress-overall">
+      <div class="progress-label" data-i18n="overallProgress">Progression globale</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 0%;"></div></div>
+      <div class="progress-text" id="progress-text">0%</div>
+    </div>
+    <div class="exam-config">
+      <label data-i18n="examDate">Date d'examen :</label>
+      <input type="date" id="exam-date" />
+    </div>
+    <ul class="nav-list" id="nav-list"></ul>
+  </aside>
+
+  <section class="content" id="content"></section>
+</main>
+
+<script>
+// ============================================================
+// DATA — bilingual content (FR/EN)
+// ============================================================
+const T = {
+  fr: { remaining: "Temps restant :", overallProgress: "Progression globale", examDate: "Date d'examen :", markDone: "Marquer comme terminé", isDone: "✓ Terminé", days: "jours", priority: "PRIORITÉ", quizScore: "Score", nextQ: "Question suivante", prevQ: "Précédente", checkA: "Vérifier", resetQuiz: "Recommencer", chooseTopic: "Choisis un thème", all: "Tous" },
+  en: { remaining: "Time left:", overallProgress: "Overall progress", examDate: "Exam date:", markDone: "Mark as done", isDone: "✓ Done", days: "days", priority: "PRIORITY", quizScore: "Score", nextQ: "Next", prevQ: "Previous", checkA: "Check", resetQuiz: "Restart", chooseTopic: "Pick a topic", all: "All" }
+};
+
+const SECTIONS = [
+  // ===== 1. OVERVIEW =====
+  {
+    id: "overview",
+    icon: "🗺️",
+    fr: { title: "Vue d'ensemble du cours", subtitle: "Plan général et thèmes prioritaires",
+      content: `
+<h2>Les quatre journées du cours</h2>
+<p>Le cours Machine Learning By Practice, dispensé par Fabrice Lauri à l'UTBM, est organisé en quatre journées thématiques. Le professeur a explicitement indiqué que <strong>MDP, Reinforcement Learning et CNN sont des thèmes prioritaires pour l'examen</strong>.</p>
+<ul>
+<li><strong>CM #1 — Introduction et Reinforcement Learning</strong> : définition de l'apprentissage, trois familles (supervisé, non supervisé, renforcement), MDP, Q-Learning. <span class="priority-tag">PRIORITÉ</span></li>
+<li><strong>CM #2 — Supervised Learning : Linear discriminants, MLP, DNN</strong> : régression linéaire, perceptron multicouche, réseaux profonds.</li>
+<li><strong>CM #3 — Supervised Learning suite</strong> : RBF, SVM, arbres de décision, Random Forest, Gradient Boosting, RNN, CNN. <span class="priority-tag">PRIORITÉ CNN</span></li>
+<li><strong>CM #4 — Dimensionality Reduction + Unsupervised Learning</strong> : PCA, Kernel PCA, k-Means, DBSCAN, GMM, hiérarchique, SOM.</li>
+</ul>
+
+<h2>Le projet Team 7</h2>
+<p>Tu travailles pour <strong>Geely Auto</strong>, un constructeur chinois qui veut entrer aux États-Unis. Ta mission : identifier les variables qui déterminent le prix d'une voiture sur ce marché, et construire un modèle de prédiction. C'est un problème de <strong>régression supervisée</strong> : Y (prix) est une valeur continue.</p>
+
+<div class="tip-box">
+<div class="tip-title">💡 Astuce mémorisation</div>
+<p>Pour formuler ton projet en 30 secondes : « J'ai entraîné et comparé 8 modèles de régression pour prédire le prix de voitures américaines à partir du dataset UCI. Le meilleur est la régression linéaire avec sélection RFE (R²=0.93), ce qui illustre le compromis biais-variance sur petit dataset. »</p>
+</div>
+
+<h2>Consignes formelles</h2>
+<ul>
+<li>À rendre avant le <strong>5 juillet 2026</strong></li>
+<li>Format du fichier : <code>Team_NomA_NomB</code></li>
+<li>Email : <code>fabrice.lauri@utbm.fr</code></li>
+</ul>
+` },
+    en: { title: "Course overview", subtitle: "General plan and priority topics",
+      content: `
+<h2>The four days of the course</h2>
+<p>The "Machine Learning By Practice" course by Fabrice Lauri at UTBM is organized in four thematic days. The professor explicitly stated that <strong>MDP, Reinforcement Learning and CNN are priority topics for the exam</strong>.</p>
+<ul>
+<li><strong>Day 1 — Introduction and Reinforcement Learning</strong>: definition of learning, three families, MDP, Q-Learning. <span class="priority-tag">PRIORITY</span></li>
+<li><strong>Day 2 — Supervised Learning: Linear discriminants, MLP, DNN</strong>.</li>
+<li><strong>Day 3 — Supervised Learning continued</strong>: RBF, SVM, decision trees, Random Forest, Gradient Boosting, RNN, CNN. <span class="priority-tag">CNN PRIORITY</span></li>
+<li><strong>Day 4 — Dimensionality Reduction + Unsupervised Learning</strong>: PCA, Kernel PCA, k-Means, DBSCAN, GMM, hierarchical, SOM.</li>
+</ul>
+
+<h2>The Team 7 project</h2>
+<p>You work for <strong>Geely Auto</strong>, a Chinese carmaker entering the US market. Your mission: identify variables determining car prices and build a prediction model. This is <strong>supervised regression</strong>: Y (price) is continuous.</p>
+
+<div class="tip-box">
+<div class="tip-title">💡 Memory tip</div>
+<p>Pitch your project in 30 seconds: "I trained and compared 8 regression models to predict US car prices using the UCI dataset. The best one is linear regression with RFE feature selection (R²=0.93), which illustrates the bias-variance tradeoff on a small dataset."</p>
+</div>
+` }
+  },
+
+  // ===== 2. FUNDAMENTALS =====
+  {
+    id: "fundamentals",
+    icon: "🎓",
+    fr: { title: "Concepts fondamentaux", subtitle: "Les trois familles + vocabulaire",
+      content: `
+<h2>Qu'est-ce qu'apprendre ?</h2>
+<p>La définition fondatrice du cours :</p>
+<div class="formula">« Apprendre, c'est s'améliorer à une tâche par la pratique. »</div>
+<p>Trois composantes essentielles : <strong>mémorisation</strong>, <strong>adaptation</strong>, <strong>généralisation</strong>. C'est la généralisation qui est la plus délicate — c'est elle qui justifie l'existence d'un test set séparé.</p>
+
+<h2>Les trois familles d'apprentissage</h2>
+
+<h3>1. Apprentissage supervisé</h3>
+<p>On dispose d'exemples avec leurs réponses correctes. L'algorithme apprend la fonction Y = f(X).</p>
+<ul>
+<li><strong>Classification</strong> : Y est une catégorie (chat/chien, fraude/pas fraude)</li>
+<li><strong>Régression</strong> : Y est une valeur continue (prix, température) — c'est ton cas</li>
+</ul>
+
+<h3>2. Apprentissage non supervisé</h3>
+<p>Pas de réponses correctes. L'algorithme identifie des structures (clusters, axes de variance).</p>
+<p>Exemples : segmentation de clientèle, PCA, sélection de variables.</p>
+
+<h3>3. Apprentissage par renforcement (RL)</h3>
+<p>Un agent apprend par essai-erreur. À chaque action, l'environnement renvoie une récompense. L'agent maximise la somme cumulée des récompenses.</p>
+<p>Exemples : robot qui apprend à marcher, AlphaZero, agent qui sort d'un labyrinthe.</p>
+
+<div class="tip-box">
+<div class="tip-title">💡 Astuce mémorisation</div>
+<p><strong>Médecin annotant des tumeurs</strong> = supervisé. <strong>Plateforme regroupant ses clients par profil sans étiquettes</strong> = non supervisé. <strong>Robot apprenant à attraper un objet</strong> = renforcement.</p>
+</div>
+
+<h2>Vocabulaire fondamental</h2>
+<ul>
+<li><strong>Feature</strong> = variable, caractéristique d'entrée (carwidth, horsepower)</li>
+<li><strong>Target</strong> = cible, étiquette, label (le prix)</li>
+<li><strong>Observation</strong> = ligne du dataset (une voiture spécifique)</li>
+<li><strong>Training set</strong> = jeu d'entraînement (161 obs)</li>
+<li><strong>Test set</strong> = jeu de test (41 obs, non vu pendant l'apprentissage)</li>
+<li><strong>Hyperparamètre</strong> = paramètre fixé avant l'apprentissage (alpha, max_depth)</li>
+<li><strong>Surapprentissage</strong> (overfitting) = modèle qui apprend par cœur, échoue en test</li>
+<li><strong>Sous-apprentissage</strong> (underfitting) = modèle trop simple, mauvais partout</li>
+</ul>
+` },
+    en: { title: "Fundamental concepts", subtitle: "The three families + vocabulary",
+      content: `
+<h2>What is learning?</h2>
+<p>The founding definition from the course:</p>
+<div class="formula">"Learning is getting better at a task through practice."</div>
+<p>Three essential components: <strong>remembering</strong>, <strong>adapting</strong>, <strong>generalising</strong>. Generalisation is the trickiest — it justifies having a separate test set.</p>
+
+<h2>The three learning families</h2>
+
+<h3>1. Supervised learning</h3>
+<p>You have examples with their correct answers. The algorithm learns Y = f(X).</p>
+<ul>
+<li><strong>Classification</strong>: Y is a category (cat/dog, fraud/no-fraud)</li>
+<li><strong>Regression</strong>: Y is a continuous value (price, temperature) — this is your case</li>
+</ul>
+
+<h3>2. Unsupervised learning</h3>
+<p>No correct answers. The algorithm identifies structures (clusters, variance axes).</p>
+
+<h3>3. Reinforcement learning (RL)</h3>
+<p>An agent learns through trial and error. After each action, the environment returns a reward. The agent maximizes cumulative rewards.</p>
+
+<div class="tip-box">
+<div class="tip-title">💡 Memory tip</div>
+<p><strong>Doctor annotating tumors</strong> = supervised. <strong>Platform clustering customers without labels</strong> = unsupervised. <strong>Robot learning to grasp objects</strong> = reinforcement.</p>
+</div>
+
+<h2>Fundamental vocabulary</h2>
+<ul>
+<li><strong>Feature</strong> = input variable (carwidth, horsepower)</li>
+<li><strong>Target</strong> = label, Y (the price)</li>
+<li><strong>Observation</strong> = row in dataset</li>
+<li><strong>Training/Test set</strong> = 80/20 split typically</li>
+<li><strong>Hyperparameter</strong> = parameter set before training</li>
+<li><strong>Overfitting / Underfitting</strong> = learning by heart / model too simple</li>
+</ul>
+` }
+  },
+
+  // ===== 3. SUPERVISED =====
+  {
+    id: "supervised",
+    icon: "📈",
+    fr: { title: "Apprentissage supervisé", subtitle: "Régression linéaire, Ridge, Lasso, arbres, ensembles, MLP",
+      content: `
+<h2>Régression linéaire (CM #2)</h2>
+<p>Le plus ancien modèle statistique. Inventée par Legendre (1805) et formalisée par Gauss (1809). On postule que Y est une combinaison linéaire des X :</p>
+<div class="formula">Y = β₀ + β₁·X₁ + β₂·X₂ + ... + βₙ·Xₙ + ε</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Méthode des moindres carrés (OLS)</div>
+<p>L'algorithme cherche les coefficients qui minimisent la <strong>somme des carrés des écarts</strong> entre prédictions et vraies valeurs. Pourquoi les carrés et pas les valeurs absolues ? Trois raisons :</p>
+<ol>
+<li>Les carrés pénalisent davantage les grands écarts (erreur de 4 = 16× pire qu'une erreur de 1)</li>
+<li>Les carrés sont dérivables partout — solution analytique élégante</li>
+<li>Sous résidus gaussiens, c'est l'estimateur optimal (théorème de Gauss-Markov)</li>
+</ol>
+<p>Formule matricielle : β̂ = (XᵀX)⁻¹ Xᵀy. Solution en une seule étape, contrairement à un réseau de neurones.</p>
+</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Loi normale (gaussienne)</div>
+<p>La distribution la plus importante en stats, entièrement caractérisée par μ (moyenne) et σ (écart-type). <strong>Règle 68-95-99.7</strong> : 68% des observations dans [μ-σ, μ+σ], 95% dans [μ-2σ, μ+2σ], 99.7% dans [μ-3σ, μ+3σ].</p>
+<p>La régression linéaire suppose des résidus gaussiens. Dans ton projet, log(prix) est plus gaussien que prix brut — c'est une justification pour transformer Y.</p>
+</div>
+
+<p><strong>Ton résultat :</strong> R² = 0.9193. Le modèle explique 92% de la variance du prix.</p>
+
+<h2>Ridge — régularisation L2</h2>
+<p>Régression linéaire + pénalité α × Σ(βᵢ²). Empêche les coefficients de devenir trop grands. Atténue la multicolinéarité. <strong>Ton résultat : R² = 0.9006.</strong></p>
+
+<h2>Lasso — régularisation L1</h2>
+<p>LASSO = Least Absolute Shrinkage and Selection Operator. Pénalité α × Σ|βᵢ|. Propriété géométrique remarquable : <strong>annule certains coefficients</strong>, donc sélection automatique de variables. <strong>Ton résultat : R² = 0.8927.</strong></p>
+
+<h2>Arbre de décision (CM #3)</h2>
+<p>Apprend une série de règles si/alors qui découpent l'espace en zones rectangulaires. Critère de découpage : réduction de variance (régression), Gini ou <strong>entropie de Shannon</strong> (classification).</p>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Entropie de Shannon</div>
+<p>Inventée par Shannon en 1948. Mesure de l'incertitude.</p>
+<div class="formula">H(P) = − Σᵢ P(eᵢ) · log₂ P(eᵢ)</div>
+<p><strong>Trois cas à connaître par cœur :</strong></p>
+<ul>
+<li>Événement certain (P=1) → entropie = 0</li>
+<li>Deux événements équiprobables → entropie = 1 bit</li>
+<li>k événements équiprobables → entropie = log₂(k)</li>
+</ul>
+<p><strong>Exemple sujet 2025 :</strong> P(e1)=0.5, P(e2)=P(e3)=0.25. H = 0.5×1 + 0.25×2 + 0.25×2 = <strong>1.5 bits</strong>.</p>
+<p>L'algorithme ID3 (Quinlan, 1986) choisit la variable qui maximise le gain d'information = réduction d'entropie.</p>
+</div>
+
+<h2>Random Forest (CM #3 — Ensemble Learning)</h2>
+<p>Décision par comité. On entraîne 100 arbres sur des sous-échantillons bootstrap, on moyenne. Stable, robuste, fournit une mesure d'importance des variables.</p>
+
+<h2>Gradient Boosting</h2>
+<p>Arbres entraînés en séquence : chaque arbre corrige les erreurs (résidus) du précédent. Variantes XGBoost, LightGBM, CatBoost — dominent les compétitions Kaggle.</p>
+
+<h2>MLP — Multi-Layer Perceptron (CM #2)</h2>
+<p>L'archétype des réseaux de neurones. Perceptron inventé par Rosenblatt en 1958.</p>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Le neurone artificiel</div>
+<p>Un neurone calcule : y = f(w₁·x₁ + w₂·x₂ + ... + b), où f est une fonction d'activation non-linéaire.</p>
+<p>Sans la non-linéarité, plusieurs couches se réduisent à une simple combinaison linéaire — c'est elle qui donne aux réseaux profonds leur puissance.</p>
+</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Fonctions d'activation</div>
+<ul>
+<li><strong>Sigmoïde</strong> : 1/(1+e⁻ˣ), entre 0 et 1. Gradient évanouissant aux extrêmes.</li>
+<li><strong>Tanh</strong> : entre -1 et 1. Mieux centrée mais même problème.</li>
+<li><strong>ReLU</strong> : max(0, x). Révolution depuis 2012. Rapide, pas d'évanouissement, sparse.</li>
+</ul>
+<p>Tu utilises ReLU dans ton projet. Choix standard moderne.</p>
+</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Descente de gradient + Backpropagation</div>
+<p><strong>Descente de gradient</strong> : on cherche le bas d'une vallée dans le brouillard. À chaque pas : w(t+1) = w(t) − η · ∇L(w(t)). Le learning rate η contrôle la taille du pas.</p>
+<p><strong>Backpropagation</strong> (Rumelhart, Hinton, Williams, 1986) : exploite la dérivation en chaîne pour propager l'erreur de la sortie vers les couches précédentes. Deux passes : forward (calcul de la prédiction) puis backward (mise à jour des poids).</p>
+</div>
+
+<p><strong>Ton résultat :</strong> MLP R² = 0.7566. Sous-performant car 161 obs sont insuffisantes pour un réseau de neurones.</p>
+
+<h2>Autres modèles (non utilisés)</h2>
+<ul>
+<li><strong>RBF</strong> (Radial Basis Functions) — combinaison de gaussiennes</li>
+<li><strong>SVM</strong> (Support Vector Machines) — maximise la marge entre classes, kernel trick</li>
+<li><strong>RNN/LSTM/GRU</strong> — pour les séquences (texte, séries temporelles)</li>
+<li><strong>CNN</strong> — pour les images (voir section dédiée)</li>
+<li><strong>k-NN</strong> — k voisins les plus proches</li>
+</ul>
+` },
+    en: { title: "Supervised learning", subtitle: "Linear regression, Ridge, Lasso, trees, ensembles, MLP",
+      content: `
+<h2>Linear regression (CM #2)</h2>
+<p>The oldest modern statistical model. Invented by Legendre (1805) and formalized by Gauss (1809). Y is a linear combination of X:</p>
+<div class="formula">Y = β₀ + β₁·X₁ + β₂·X₂ + ... + βₙ·Xₙ + ε</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Ordinary Least Squares (OLS)</div>
+<p>The algorithm minimizes the <strong>sum of squared errors</strong> between predictions and true values. Why squares and not absolute values?</p>
+<ol>
+<li>Squares penalize large errors more (error of 4 = 16× worse than error of 1)</li>
+<li>Squares are differentiable everywhere — elegant analytical solution</li>
+<li>Under Gaussian residuals, OLS is the optimal unbiased estimator (Gauss-Markov theorem)</li>
+</ol>
+<p>Matrix form: β̂ = (XᵀX)⁻¹ Xᵀy. One-step solution.</p>
+</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Normal distribution</div>
+<p>Fully characterized by μ (mean) and σ (std dev). <strong>68-95-99.7 rule</strong>: 68% of obs within [μ±σ], 95% within [μ±2σ], 99.7% within [μ±3σ].</p>
+</div>
+
+<p><strong>Your result:</strong> R² = 0.9193. Model explains 92% of price variance.</p>
+
+<h2>Ridge — L2 regularization</h2>
+<p>Linear regression + penalty α × Σ(βᵢ²). Prevents large coefficients, mitigates multicollinearity. <strong>Your result: R² = 0.9006.</strong></p>
+
+<h2>Lasso — L1 regularization</h2>
+<p>LASSO penalty α × Σ|βᵢ|. Sets some coefficients to <strong>exactly zero</strong> = automatic feature selection. <strong>Your result: R² = 0.8927.</strong></p>
+
+<h2>Decision tree (CM #3)</h2>
+<p>Learns nested if/then rules. Splitting criterion: variance reduction (regression), Gini or Shannon entropy (classification).</p>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Shannon entropy</div>
+<div class="formula">H(P) = − Σᵢ P(eᵢ) · log₂ P(eᵢ)</div>
+<p>Three cases to know: certain event (P=1) → H=0. Two equiprobable events → H=1 bit. k equiprobable events → H=log₂(k).</p>
+<p>The ID3 algorithm (Quinlan, 1986) picks the variable maximizing information gain = entropy reduction.</p>
+</div>
+
+<h2>Random Forest</h2>
+<p>Decision by committee. 100 trees on bootstrap samples, averaged. Robust, provides feature importance.</p>
+
+<h2>Gradient Boosting</h2>
+<p>Sequential trees: each one corrects the previous one's residuals. XGBoost, LightGBM, CatBoost dominate Kaggle competitions.</p>
+
+<h2>MLP (Multi-Layer Perceptron)</h2>
+<p>Archetype of neural networks. Perceptron invented by Rosenblatt in 1958.</p>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Artificial neuron</div>
+<p>y = f(w₁·x₁ + w₂·x₂ + ... + b), where f is a non-linear activation function.</p>
+</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Activation functions</div>
+<ul>
+<li><strong>Sigmoid</strong>: 1/(1+e⁻ˣ). Vanishing gradient issue.</li>
+<li><strong>Tanh</strong>: between -1 and 1. Same issue.</li>
+<li><strong>ReLU</strong>: max(0, x). Revolution since 2012. Fast, no vanishing gradient.</li>
+</ul>
+</div>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Gradient descent + Backpropagation</div>
+<p><strong>Gradient descent</strong>: w(t+1) = w(t) − η · ∇L(w(t)). Learning rate η controls step size.</p>
+<p><strong>Backpropagation</strong> (Rumelhart, Hinton, Williams, 1986): uses chain rule to propagate error backward.</p>
+</div>
+
+<p><strong>Your result:</strong> MLP R² = 0.7566. Underperforms because 161 obs are too few.</p>
+` }
+  },
+
+  // ===== 4. UNSUPERVISED =====
+  {
+    id: "unsupervised",
+    icon: "🧩",
+    fr: { title: "Apprentissage non supervisé", subtitle: "PCA, clustering",
+      content: `
+<h2>La PCA — Principal Component Analysis (CM #4)</h2>
+<p>Inventée par Karl Pearson en 1901. C'est l'outil canonique de réduction de dimension.</p>
+<p><strong>Idée géniale</strong> : au lieu de garder tes 65 variables originales, tu crées des composantes principales — combinaisons linéaires des variables — rangées par ordre décroissant de variance expliquée.</p>
+<p>Géométriquement : la PCA fait pivoter le repère vers les axes de plus grande dispersion. Mathématiquement : ces axes sont les vecteurs propres de la matrice de covariance.</p>
+<p><strong>Dans ton projet :</strong> 32 composantes capturent 95% de la variance, soit une réduction de 50% du nombre de variables.</p>
+<p><strong>Pourquoi non supervisée :</strong> elle ne regarde jamais Y, elle ne fait que réorganiser X.</p>
+
+<div class="example-box">
+<div class="ex-title">📌 Bémol important</div>
+<p>La PCA est conçue pour des variables continues. Tu l'appliques sur des variables one-hot encodées (binaires), ce qui est techniquement faisable mais conceptuellement discutable. À mentionner à l'oral pour montrer ta hauteur de vue.</p>
+</div>
+
+<h2>Kernel PCA</h2>
+<p>Extension non-linéaire via le kernel trick. Capture des géométries complexes (spirale, croissants).</p>
+
+<h2>Les algorithmes de clustering (non utilisés)</h2>
+
+<h3>k-Means</h3>
+<p>Le plus populaire. On fixe k clusters, on initialise k centroïdes, on itère : assignation puis recalcul des centroïdes. Converge vers un minimum local.</p>
+
+<h3>Mean Shift</h3>
+<p>Pas besoin de fixer k. Chaque point glisse vers la zone de plus haute densité locale.</p>
+
+<h3>DBSCAN</h3>
+<p>Density-Based Spatial Clustering of Applications with Noise. Pas besoin de fixer k, gère le bruit, excelle sur formes irrégulières.</p>
+
+<h3>GMM — Gaussian Mixture Models</h3>
+<p>Modèle de mélange de gaussiennes. Algorithme EM (Expectation-Maximization). Clusters elliptiques, appartenance probabiliste.</p>
+
+<h3>Hierarchical clustering</h3>
+<p>Agglomératif : chaque obs commence dans son propre cluster, on fusionne progressivement. Résultat : dendrogramme.</p>
+
+<h3>SOM — Self-Organizing Maps</h3>
+<p>Cartes de Kohonen. Projection en 2D préservant les relations de voisinage.</p>
+` },
+    en: { title: "Unsupervised learning", subtitle: "PCA, clustering",
+      content: `
+<h2>PCA — Principal Component Analysis (CM #4)</h2>
+<p>Invented by Karl Pearson in 1901. Canonical tool for dimensionality reduction.</p>
+<p><strong>Brilliant idea</strong>: instead of keeping your 65 original variables, you create principal components — linear combinations sorted by decreasing variance explained.</p>
+<p>Geometrically: PCA rotates the axes toward directions of maximum spread. Mathematically: these are eigenvectors of the covariance matrix.</p>
+<p><strong>In your project:</strong> 32 components capture 95% of variance — 50% reduction.</p>
+<p><strong>Why unsupervised:</strong> never looks at Y, only reorganizes X.</p>
+
+<h2>Clustering algorithms (not used)</h2>
+<h3>k-Means</h3><p>Most popular. Fix k clusters, init centroids, iterate.</p>
+<h3>Mean Shift</h3><p>No need to fix k. Each point slides to highest density.</p>
+<h3>DBSCAN</h3><p>Density-based, handles noise, irregular shapes.</p>
+<h3>GMM</h3><p>Gaussian mixture. EM algorithm. Elliptical clusters.</p>
+<h3>Hierarchical clustering</h3><p>Agglomerative: progressive fusion, produces a dendrogram.</p>
+<h3>SOM</h3><p>Kohonen maps. 2D projection preserving topology.</p>
+` }
+  },
+
+  // ===== 5. MDP + RL (PRIORITY) =====
+  {
+    id: "rl",
+    icon: "🎮",
+    priority: true,
+    fr: { title: "MDP & Reinforcement Learning", subtitle: "Focus prioritaire pour l'examen",
+      content: `
+<div class="warning-box">
+<div class="warn-title">⚠️ FOCUS PRIORITAIRE</div>
+<p>Ton professeur a explicitement indiqué que MDP et RL sont des thèmes prioritaires. Sur l'examen 2025, l'exercice 3 portait sur le RL et valait <strong>7 points sur 20</strong>.</p>
+</div>
+
+<h2>Le principe du Reinforcement Learning</h2>
+<p>RL = Reinforcement Learning. <strong>Définition :</strong> apprendre en interagissant avec son environnement pour atteindre un but. Inspiré du behaviorisme de Skinner.</p>
+<p>Trois signaux entre l'agent et l'environnement à chaque pas de temps : <strong>état (s)</strong>, <strong>action (a)</strong>, <strong>récompense (r)</strong>. Objectif : maximiser la somme cumulée des récompenses.</p>
+
+<h2>Le formalisme MDP</h2>
+<p>MDP = Markov Decision Process (processus de décision markovien). Un MDP fini est un tuple <strong>(S, A, T, R, γ)</strong> :</p>
+<ul>
+<li><strong>S</strong> : ensemble fini d'états (les situations possibles)</li>
+<li><strong>A(s)</strong> : actions disponibles dans chaque état s</li>
+<li><strong>T : S × A → S</strong> : fonction de transition entre états</li>
+<li><strong>R : S × A → ℝ</strong> : fonction de récompense</li>
+<li><strong>γ (gamma)</strong> : facteur d'actualisation entre 0 et 1</li>
+</ul>
+
+<div class="tip-box">
+<div class="tip-title">💡 Méthodologie en 5 étapes pour formaliser un MDP</div>
+<ol>
+<li><strong>Définir S</strong> : quelles informations l'agent doit-il connaître pour décider ?</li>
+<li><strong>Définir A(s)</strong> : quelles actions sont possibles dans chaque état ?</li>
+<li><strong>Définir T(s, a)</strong> : si je fais a dans s, où vais-je ?</li>
+<li><strong>Définir R(s, a)</strong> : reflète ce que tu VEUX que l'agent apprenne (+100 pour le but, -1 par mouvement)</li>
+<li><strong>Fixer γ</strong> : 0.9 est très courant</li>
+</ol>
+</div>
+
+<h2>La propriété de Markov</h2>
+<p>Un état est markovien si la probabilité du prochain état ne dépend que de l'état courant et de l'action courante — <strong>pas de tout l'historique</strong>.</p>
+<p>Échecs = markovien (la position résume tout). Poker = pas exactement markovien (l'historique des cartes joue).</p>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — L'équation de Bellman</div>
+<p>Pilier mathématique du RL, due à Richard Bellman (1953).</p>
+<p><strong>Intuition</strong> : la valeur d'un état = ce que je gagne tout de suite + valeur actualisée de l'état suivant.</p>
+<div class="formula">V*(s) = max<sub>a</sub> [R(s, a) + γ · Σ<sub>s'</sub> P(s,a,s') · V*(s')]</div>
+<p>Version Q (utilisée en Q-Learning) :</p>
+<div class="formula">Q*(s, a) = Σ<sub>s'</sub> P(s,a,s') · [R(s,a,s') + γ · max<sub>a'</sub> Q*(s', a')]</div>
+<p>γ proche de 1 = on valorise le long terme. γ proche de 0 = on est myope.</p>
+</div>
+
+<h2>Choisir le bon algorithme</h2>
+<table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+<tr style="background: var(--primary); color: white;"><th style="padding: 0.8rem; text-align: left;">Algorithme</th><th style="padding: 0.8rem; text-align: left;">Quand</th></tr>
+<tr><td style="padding: 0.8rem; border-bottom: 1px solid var(--border);">Q-Iteration / Policy Iteration</td><td style="padding: 0.8rem; border-bottom: 1px solid var(--border);">Dynamique connue (P et R)</td></tr>
+<tr style="background: var(--bg);"><td style="padding: 0.8rem;">Q-Learning</td><td style="padding: 0.8rem;">Dynamique inconnue (TD learning)</td></tr>
+<tr><td style="padding: 0.8rem;">SARSA</td><td style="padding: 0.8rem;">On-policy (apprend la politique suivie)</td></tr>
+</table>
+
+<h2>L'algorithme Q-Learning</h2>
+<div class="formula" style="text-align: left;">
+Initialiser Q(s, a) = 0<br>
+Pour chaque épisode :<br>
+&nbsp;&nbsp;Initialiser s<br>
+&nbsp;&nbsp;Répéter :<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Choisir a (ε-greedy)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Exécuter a, observer r, s'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<strong>Q(s,a) ← Q(s,a) + α · [r + γ · max<sub>a'</sub> Q(s',a') − Q(s,a)]</strong><br>
+&nbsp;&nbsp;&nbsp;&nbsp;s ← s'<br>
+&nbsp;&nbsp;Jusqu'à s terminal
+</div>
+
+<h2>Exploration / Exploitation</h2>
+<p><strong>ε-Greedy</strong> : avec probabilité 1-ε, prendre la meilleure action connue (exploitation). Avec probabilité ε, prendre une action aléatoire (exploration). ε diminue progressivement.</p>
+
+<div class="example-box">
+<div class="ex-title">📌 Exercice corrigé — Two water jugs (sujet examen 2025)</div>
+<p><strong>Énoncé :</strong> Deux pichets vides (3L et 4L). On veut obtenir 6L au total : soit 3-3, soit 2-4. Actions : vider, remplir entièrement, transférer.</p>
+<p><strong>S</strong> = {(J3, J4) | 0 ≤ J3 ≤ 3, 0 ≤ J4 ≤ 4}, soit |S| = 20 états.</p>
+<p><strong>A</strong> = {remplir J3, remplir J4, vider J3, vider J4, J3→J4, J4→J3}, |A| = 6.</p>
+<p><strong>R</strong> = +100 si état cible atteint, -1 sinon (incite à la vitesse).</p>
+<p><strong>Algorithme</strong> : Q-Iteration ou Policy Iteration (dynamique connue, espace petit).</p>
+</div>
+` },
+    en: { title: "MDP & Reinforcement Learning", subtitle: "Priority focus for exam",
+      content: `
+<div class="warning-box">
+<div class="warn-title">⚠️ PRIORITY FOCUS</div>
+<p>Your professor explicitly indicated MDP and RL are priority topics. On the 2025 exam, RL exercise was worth <strong>7 points out of 20</strong>.</p>
+</div>
+
+<h2>The principle of Reinforcement Learning</h2>
+<p>RL = learning by interacting with an environment to reach a goal. Inspired by Skinner's behaviorism.</p>
+<p>Three signals between agent and environment at each time step: <strong>state (s)</strong>, <strong>action (a)</strong>, <strong>reward (r)</strong>. Goal: maximize cumulative rewards.</p>
+
+<h2>MDP formalism</h2>
+<p>MDP = Markov Decision Process. Tuple <strong>(S, A, T, R, γ)</strong>:</p>
+<ul>
+<li><strong>S</strong>: finite set of states</li>
+<li><strong>A(s)</strong>: available actions in each state</li>
+<li><strong>T</strong>: transition function</li>
+<li><strong>R</strong>: reward function</li>
+<li><strong>γ</strong>: discount factor between 0 and 1</li>
+</ul>
+
+<div class="tip-box">
+<div class="tip-title">💡 5-step methodology to formalize a MDP</div>
+<ol>
+<li><strong>Define S</strong>: what info does the agent need to decide?</li>
+<li><strong>Define A(s)</strong>: what actions are possible?</li>
+<li><strong>Define T(s,a)</strong>: if I do a in s, where do I go?</li>
+<li><strong>Define R(s,a)</strong>: reflects what you WANT the agent to learn</li>
+<li><strong>Set γ</strong>: 0.9 is common</li>
+</ol>
+</div>
+
+<h2>Markov property</h2>
+<p>A state is Markovian if the probability of the next state depends only on current state and action — not the full history.</p>
+<p>Chess = Markovian. Poker = not strictly.</p>
+
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Bellman equation</div>
+<p>Mathematical pillar of RL, due to Richard Bellman (1953).</p>
+<p><strong>Intuition</strong>: value of a state = immediate reward + discounted value of next state.</p>
+<div class="formula">V*(s) = max<sub>a</sub> [R(s, a) + γ · Σ<sub>s'</sub> P(s,a,s') · V*(s')]</div>
+<div class="formula">Q*(s, a) = Σ<sub>s'</sub> P(s,a,s') · [R(s,a,s') + γ · max<sub>a'</sub> Q*(s', a')]</div>
+</div>
+
+<h2>Q-Learning algorithm</h2>
+<div class="formula" style="text-align: left;">
+Init Q(s, a) = 0<br>
+For each episode:<br>
+&nbsp;&nbsp;Init s<br>
+&nbsp;&nbsp;Repeat:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Pick a (ε-greedy)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Execute a, observe r, s'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<strong>Q(s,a) ← Q(s,a) + α · [r + γ · max<sub>a'</sub> Q(s',a') − Q(s,a)]</strong><br>
+&nbsp;&nbsp;&nbsp;&nbsp;s ← s'<br>
+&nbsp;&nbsp;Until terminal
+</div>
+
+<h2>Exploration vs Exploitation</h2>
+<p><strong>ε-Greedy</strong>: with prob 1-ε, pick best action. With prob ε, pick random action.</p>
+` }
+  },
+
+  // ===== 6. CNN (PRIORITY) =====
+  {
+    id: "cnn",
+    icon: "🖼️",
+    priority: true,
+    fr: { title: "CNN — Convolutional Neural Networks", subtitle: "Focus prioritaire pour l'examen",
+      content: `
+<div class="warning-box">
+<div class="warn-title">⚠️ FOCUS PRIORITAIRE</div>
+<p>Ton professeur a explicitement indiqué que les CNN sont un thème prioritaire. Le TD WS05 contenait deux exercices complets sur la convolution 2D et le design d'architectures.</p>
+</div>
+
+<h2>L'idée fondatrice du CNN</h2>
+<p>Un CNN est conçu pour traiter des données ayant une structure spatiale, principalement les images. <strong>Idée géniale</strong> : au lieu de connecter chaque neurone à toutes les entrées (comme dans un MLP), on utilise des filtres locaux qui glissent sur l'image.</p>
+<p>Trois bénéfices :</p>
+<ul>
+<li><strong>Localité</strong> — motifs locaux détectés sans dépendre de leur position absolue</li>
+<li><strong>Partage de paramètres</strong> — même filtre partout</li>
+<li><strong>Invariance par translation</strong> — un chat reconnu à gauche est reconnu à droite</li>
+</ul>
+
+<div class="warning-box">
+<div class="warn-title">⚠️ FORMULE À CONNAÎTRE PAR CŒUR</div>
+<p>Si l'entrée a une taille <strong>H × W</strong>, le kernel <strong>K × K</strong>, padding <strong>P</strong>, stride <strong>S</strong> :</p>
+<div class="formula">Taille de sortie = ⌊(H + 2P − K) / S⌋ + 1</div>
+<p>Cas particuliers fréquents :</p>
+<ul>
+<li><strong>No padding (valid)</strong> : P = 0, sortie = ⌊(H − K)/S⌋ + 1</li>
+<li><strong>Same padding</strong> : on choisit P pour que sortie = entrée. Pour S=1, P = (K−1)/2</li>
+</ul>
+</div>
+
+<h2>Exemples de calcul</h2>
+<ul>
+<li>H=32, K=3, P=0, S=1 → sortie = (32-3)/1 + 1 = <strong>30</strong></li>
+<li>H=32, K=3, P=1, S=1 (same) → sortie = (32+2-3)/1 + 1 = <strong>32</strong></li>
+<li>H=32, K=5, P=0, S=1 → sortie = (32-5)/1 + 1 = <strong>28</strong></li>
+<li>H=32, K=3, P=0, S=2 → sortie = ⌊(32-3)/2⌋ + 1 = <strong>15</strong></li>
+</ul>
+
+<h2>Le pooling : réduire la dimension spatiale</h2>
+<p>Le <strong>max-pooling</strong> (le plus courant) glisse une fenêtre (généralement 2×2 stride 2) et garde le maximum. L'<strong>average pooling</strong> fait la moyenne.</p>
+
+<div class="tip-box">
+<div class="tip-title">💡 Pourquoi max-pooling plutôt qu'average</div>
+<ol>
+<li>Il conserve les activations les plus fortes (détails saillants)</li>
+<li>Il est plus robuste aux petites translations</li>
+<li>L'average diluerait les signaux importants</li>
+</ol>
+</div>
+
+<h2>Comptage des paramètres</h2>
+<div class="zoom-box">
+<div class="zoom-title">🔍 ZOOM — Formules de comptage</div>
+<p><strong>Conv2D</strong> avec K filtres, kernel F×F, Cin canaux d'entrée :</p>
+<div class="formula">Paramètres = K × (F × F × Cin) + K</div>
+<p>(les +K sont les biais, un par filtre)</p>
+<p><strong>Dense</strong> avec N neurones et M neurones en entrée :</p>
+<div class="formula">Paramètres = N × M + N</div>
+<p><strong>Pooling et GAP n'ont AUCUN paramètre.</strong></p>
+</div>
+
+<div class="example-box">
+<div class="ex-title">📌 Exercice corrigé — Comptage</div>
+<p><strong>Architecture :</strong> Image 32×32×3 → Conv-16 (5×5, same) → MaxPool 2×2 → Conv-32 (5×5, same) → MaxPool 2×2 → GAP → Dense(10)</p>
+<p><strong>Conv-16 (5×5, 3 canaux)</strong> : 16 × (5·5·3) + 16 = <strong>1216 params</strong></p>
+<p><strong>Conv-32 (5×5, 16 canaux)</strong> : 32 × (5·5·16) + 32 = <strong>12832 params</strong></p>
+<p><strong>Dense(10) après GAP de 32 canaux</strong> : 10 × 32 + 10 = <strong>330 params</strong></p>
+<p><strong>Total : 14378 paramètres</strong> — sous le seuil de 15000.</p>
+</div>
+
+<h2>GAP vs Flatten + Dense</h2>
+<p><strong>Global Average Pooling</strong> réduit chaque feature map à sa moyenne (un seul nombre par canal). Avec une feature map 8×8×32, on passe de 2048 valeurs à 32 valeurs. <strong>Zéro paramètre.</strong></p>
+<p><strong>Avantages du GAP</strong> : moins de paramètres → moins de surapprentissage, plus rapide, indépendant de la taille spatiale. C'est ce qu'utilisent ResNet, MobileNet, EfficientNet.</p>
+` },
+    en: { title: "CNN — Convolutional Neural Networks", subtitle: "Priority focus for exam",
+      content: `
+<div class="warning-box">
+<div class="warn-title">⚠️ PRIORITY FOCUS</div>
+<p>Your professor explicitly indicated CNNs are a priority topic.</p>
+</div>
+
+<h2>The founding idea of CNNs</h2>
+<p>CNNs handle data with spatial structure (images). Instead of connecting every neuron to every input, they use local filters that slide over the image.</p>
+<ul>
+<li><strong>Locality</strong></li>
+<li><strong>Parameter sharing</strong></li>
+<li><strong>Translation invariance</strong></li>
+</ul>
+
+<div class="warning-box">
+<div class="warn-title">⚠️ FORMULA TO KNOW BY HEART</div>
+<div class="formula">Output size = ⌊(H + 2P − K) / S⌋ + 1</div>
+</div>
+
+<h2>Pooling</h2>
+<p><strong>Max-pooling</strong> keeps the maximum, preserves salient features. Generally preferred over average pooling for image classification.</p>
+
+<h2>Parameter counting</h2>
+<div class="formula">Conv: K × (F × F × Cin) + K | Dense: N × M + N</div>
+
+<div class="example-box">
+<div class="ex-title">📌 Worked exercise</div>
+<p><strong>Architecture:</strong> 32×32×3 → Conv-16(5×5) → MaxPool → Conv-32(5×5) → MaxPool → GAP → Dense(10)</p>
+<p>Conv-16: 1216 params · Conv-32: 12832 params · Dense: 330 params · <strong>Total: 14378</strong></p>
+</div>
+
+<h2>GAP vs Flatten + Dense</h2>
+<p>GAP averages each feature map to one number. Zero parameters. Less overfitting, faster, used in ResNet/MobileNet/EfficientNet.</p>
+` }
+  },
+
+  // ===== 7. PIPELINE =====
+  {
+    id: "pipeline",
+    icon: "⚙️",
+    fr: { title: "Pipeline ML & Métriques", subtitle: "Démarche complète + R², MAE, RMSE...",
+      content: `
+<h2>Le pipeline en 7 étapes</h2>
+<ol>
+<li><strong>Données brutes</strong> — lecture du CSV, vue d'ensemble</li>
+<li><strong>EDA</strong> — Exploratory Data Analysis : valeurs manquantes, distributions, corrélations</li>
+<li><strong>Préparation</strong> — encodage catégoriel, outliers (IQR), train/test split, scaling</li>
+<li><strong>Sélection de variables</strong> — VIF, RFE, PCA</li>
+<li><strong>Modélisation</strong> — entraînement de plusieurs modèles</li>
+<li><strong>Évaluation</strong> — R², MAE, RMSE, MAPE, cross-validation</li>
+<li><strong>Interprétation</strong> — coefficients, importance des features, recommandations</li>
+</ol>
+
+<h2>Métriques de régression</h2>
+<ul>
+<li><strong>R²</strong> (coefficient de détermination) — proportion de variance expliquée. 0 à 1.</li>
+<li><strong>MAE</strong> (Mean Absolute Error) — moyenne des écarts absolus, en unités de Y</li>
+<li><strong>MSE</strong> (Mean Squared Error) — pénalise les grosses erreurs</li>
+<li><strong>RMSE</strong> (Root MSE) — racine de MSE, retrouve l'unité de Y</li>
+<li><strong>MAPE</strong> (Mean Absolute Percentage Error) — erreur en %</li>
+</ul>
+
+<h2>Méthodes de sélection de variables</h2>
+<ul>
+<li><strong>VIF</strong> (Variance Inflation Factor) — détecte la multicolinéarité. >10 = sévère</li>
+<li><strong>RFE</strong> (Recursive Feature Elimination) — élimine récursivement les variables les moins utiles</li>
+<li><strong>PCA</strong> — réduction de dimension non supervisée</li>
+</ul>
+
+<div class="tip-box">
+<div class="tip-title">💡 Trois familles de méthodes de sélection</div>
+<ul>
+<li><strong>Filtres</strong> — évaluent chaque variable indépendamment (corrélation, chi-2)</li>
+<li><strong>Wrappers</strong> — utilisent un modèle (RFE)</li>
+<li><strong>Embarquées</strong> — intégrées à l'entraînement (Lasso, importance Random Forest)</li>
+</ul>
+</div>
+
+<h2>Pièges méthodologiques</h2>
+<ul>
+<li><strong>Data leakage</strong> — informations du test qui s'infiltrent dans l'entraînement</li>
+<li><strong>Surapprentissage</strong> — symptôme : train >> test</li>
+<li><strong>Hyperparamètres choisis "à la main"</strong> — utiliser GridSearchCV</li>
+<li><strong>Compromis biais-variance</strong> — modèle simple = fort biais, modèle complexe = forte variance</li>
+<li><strong>Fléau de la dimensionnalité</strong> — il faut plus d'observations à mesure que les variables augmentent</li>
+</ul>
+` },
+    en: { title: "ML Pipeline & Metrics", subtitle: "Complete process + R², MAE, RMSE...",
+      content: `
+<h2>The 7-step pipeline</h2>
+<ol>
+<li>Raw data</li>
+<li>EDA — exploratory analysis</li>
+<li>Preparation — encoding, outliers, split, scaling</li>
+<li>Feature selection — VIF, RFE, PCA</li>
+<li>Modeling</li>
+<li>Evaluation — R², MAE, RMSE, MAPE, CV</li>
+<li>Interpretation</li>
+</ol>
+
+<h2>Regression metrics</h2>
+<ul>
+<li><strong>R²</strong> — proportion of variance explained</li>
+<li><strong>MAE</strong> — mean absolute error</li>
+<li><strong>MSE / RMSE</strong> — squared error</li>
+<li><strong>MAPE</strong> — percentage error</li>
+</ul>
+
+<h2>Methodological pitfalls</h2>
+<ul>
+<li><strong>Data leakage</strong></li>
+<li><strong>Overfitting</strong></li>
+<li><strong>Bias-variance tradeoff</strong></li>
+<li><strong>Curse of dimensionality</strong></li>
+</ul>
+` }
+  },
+
+  // ===== 8. QUIZZES =====
+  {
+    id: "quiz",
+    icon: "✏️",
+    fr: { title: "Quiz interactifs", subtitle: "Auto-test par thème, avec correction immédiate",
+      content: `<div id="quiz-app"></div>` },
+    en: { title: "Interactive quizzes", subtitle: "Self-test by topic, with immediate feedback",
+      content: `<div id="quiz-app"></div>` }
+  }
+];
+
+// ============================================================
+// QUIZ DATA — bilingual
+// ============================================================
+const QUIZZES = [
+  { topic: "fundamentals", topicFr: "Fondamentaux", topicEn: "Fundamentals",
+    fr: { q: "Quelle est la différence principale entre régression et classification ?", opts: ["La taille du dataset", "La nature de Y : continue (régression) vs catégorielle (classification)", "Le nombre de variables", "Le type d'algorithme utilisé"], correct: 1, exp: "En classification, Y est une catégorie (chat/chien). En régression, Y est une valeur continue (prix, température)." },
+    en: { q: "What is the main difference between regression and classification?", opts: ["Dataset size", "Nature of Y: continuous (regression) vs categorical (classification)", "Number of features", "Algorithm type"], correct: 1, exp: "In classification, Y is a category. In regression, Y is a continuous value." }
+  },
+  { topic: "fundamentals",
+    fr: { q: "Que désigne 'feature' en machine learning ?", opts: ["La cible à prédire", "Une variable d'entrée du modèle", "Le score de performance", "Un type de modèle"], correct: 1, exp: "Feature = variable d'entrée. La cible s'appelle target ou Y." },
+    en: { q: "What does 'feature' mean in ML?", opts: ["The target", "An input variable", "The performance score", "A model type"], correct: 1, exp: "Feature = input variable. The target is called Y." }
+  },
+  { topic: "fundamentals",
+    fr: { q: "Qu'est-ce que le surapprentissage (overfitting) ?", opts: ["Le modèle est trop simple", "Le modèle apprend par cœur le training set et échoue en test", "Le dataset est trop grand", "L'algorithme est trop lent"], correct: 1, exp: "Symptôme typique : très bonne performance en train, mauvaise performance en test." },
+    en: { q: "What is overfitting?", opts: ["Model too simple", "Model memorizes training set, fails on test", "Dataset too large", "Algorithm too slow"], correct: 1, exp: "Symptom: excellent training performance, poor test performance." }
+  },
+  { topic: "supervised", topicFr: "Supervisé", topicEn: "Supervised",
+    fr: { q: "Quelle est la différence entre Ridge et Lasso ?", opts: ["Ridge utilise L1, Lasso utilise L2", "Ridge utilise L2, Lasso utilise L1 et peut annuler des coefficients", "Ils sont identiques", "Ridge est pour la classification"], correct: 1, exp: "Ridge (L2) réduit les coefficients sans les annuler. Lasso (L1) en annule certains = sélection automatique de variables." },
+    en: { q: "Difference between Ridge and Lasso?", opts: ["Ridge=L1, Lasso=L2", "Ridge=L2, Lasso=L1 and can zero coefficients", "Identical", "Ridge is for classification"], correct: 1, exp: "Ridge (L2) shrinks coefficients. Lasso (L1) zeros some out = automatic feature selection." }
+  },
+  { topic: "supervised",
+    fr: { q: "Qu'est-ce qu'OLS ?", opts: ["Online Learning System", "Ordinary Least Squares — moindres carrés ordinaires", "Optimized Logistic Solver", "Open Learning Standard"], correct: 1, exp: "OLS = méthode standard d'estimation de la régression linéaire, due à Legendre et Gauss." },
+    en: { q: "What is OLS?", opts: ["Online Learning System", "Ordinary Least Squares", "Optimized Logistic Solver", "Open Learning Standard"], correct: 1, exp: "OLS = standard method for linear regression estimation, by Legendre and Gauss." }
+  },
+  { topic: "supervised",
+    fr: { q: "Pourquoi utiliser une fonction d'activation non-linéaire dans un MLP ?", opts: ["Pour accélérer le calcul", "Sans non-linéarité, plusieurs couches se ramènent à une simple régression linéaire", "Pour réduire le nombre de paramètres", "C'est purement esthétique"], correct: 1, exp: "La non-linéarité est ce qui donne aux réseaux profonds leur pouvoir d'approximation universelle." },
+    en: { q: "Why use non-linear activation in MLP?", opts: ["To speed up computation", "Without non-linearity, multiple layers reduce to linear regression", "To reduce parameters", "Aesthetic only"], correct: 1, exp: "Non-linearity gives deep networks their universal approximation power." }
+  },
+  { topic: "supervised",
+    fr: { q: "Qu'est-ce qu'une Random Forest ?", opts: ["Un arbre de décision profond", "Une moyenne de 100 arbres entraînés sur des sous-échantillons bootstrap", "Un réseau de neurones", "Une régression non linéaire"], correct: 1, exp: "Principe du bagging : on stabilise un modèle instable en moyennant plusieurs versions entraînées différemment." },
+    en: { q: "What is a Random Forest?", opts: ["A deep decision tree", "Average of 100 trees on bootstrap subsamples", "A neural network", "Non-linear regression"], correct: 1, exp: "Bagging principle: stabilize an unstable model by averaging differently trained versions." }
+  },
+  { topic: "supervised",
+    fr: { q: "Quelle fonction d'activation est aujourd'hui le choix par défaut dans les MLP ?", opts: ["Sigmoïde", "Tanh", "ReLU", "Linéaire"], correct: 2, exp: "ReLU (Rectified Linear Unit) f(x)=max(0,x) a déclenché la révolution du deep learning vers 2012." },
+    en: { q: "Which activation is the modern default in MLPs?", opts: ["Sigmoid", "Tanh", "ReLU", "Linear"], correct: 2, exp: "ReLU = max(0, x). Triggered the deep learning revolution around 2012." }
+  },
+  { topic: "rl", topicFr: "MDP & RL", topicEn: "MDP & RL",
+    fr: { q: "Que veut dire MDP ?", opts: ["Multi-Decision Process", "Markov Decision Process", "Maximum Discount Policy", "Method for Direct Predictions"], correct: 1, exp: "MDP = Markov Decision Process, du nom du mathématicien russe Andrey Markov." },
+    en: { q: "What does MDP stand for?", opts: ["Multi-Decision Process", "Markov Decision Process", "Maximum Discount Policy", "Method for Direct Predictions"], correct: 1, exp: "MDP = Markov Decision Process, named after Russian mathematician Andrey Markov." }
+  },
+  { topic: "rl",
+    fr: { q: "Combien d'éléments définissent un MDP ?", opts: ["3 (états, actions, récompenses)", "4 (S, A, T, R)", "5 (S, A, T, R, γ)", "6"], correct: 2, exp: "Un MDP est défini par le tuple (S, A, T, R, γ) où γ est le facteur d'actualisation." },
+    en: { q: "How many elements define an MDP?", opts: ["3", "4", "5 (S, A, T, R, γ)", "6"], correct: 2, exp: "MDP is defined by tuple (S, A, T, R, γ) where γ is the discount factor." }
+  },
+  { topic: "rl",
+    fr: { q: "Quel algorithme privilégier quand la dynamique de l'environnement est INCONNUE ?", opts: ["Q-Iteration", "Policy Iteration", "Q-Learning", "Régression linéaire"], correct: 2, exp: "Q-Learning est un algorithme de Temporal-Difference learning qui apprend par essai-erreur sans connaître P et R." },
+    en: { q: "Which algorithm when dynamics is UNKNOWN?", opts: ["Q-Iteration", "Policy Iteration", "Q-Learning", "Linear regression"], correct: 2, exp: "Q-Learning is a Temporal-Difference algorithm that learns by trial and error without knowing P and R." }
+  },
+  { topic: "rl",
+    fr: { q: "Que signifie la propriété de Markov ?", opts: ["L'environnement est déterministe", "Le prochain état ne dépend que de l'état courant et de l'action courante", "Le nombre d'états est fini", "L'agent connaît la dynamique"], correct: 1, exp: "Une position d'échecs satisfait Markov, une partie de poker pas exactement." },
+    en: { q: "Markov property means?", opts: ["Deterministic environment", "Next state depends only on current state and action", "Finite states", "Agent knows the dynamics"], correct: 1, exp: "Chess satisfies Markov, poker doesn't strictly." }
+  },
+  { topic: "rl",
+    fr: { q: "Quelle est la formule de mise à jour Q-Learning ?", opts: ["Q ← α · r", "Q(s,a) ← Q(s,a) + α · [r + γ · max Q(s',a') − Q(s,a)]", "Q = somme des récompenses", "Q ← γ · Q"], correct: 1, exp: "C'est la formule fondamentale du Temporal-Difference learning." },
+    en: { q: "Q-Learning update formula?", opts: ["Q ← α · r", "Q(s,a) ← Q(s,a) + α · [r + γ · max Q(s',a') − Q(s,a)]", "Q = sum of rewards", "Q ← γ · Q"], correct: 1, exp: "Fundamental TD learning formula." }
+  },
+  { topic: "rl",
+    fr: { q: "Que fait la stratégie ε-greedy ?", opts: ["Toujours prendre la meilleure action", "Avec probabilité 1-ε exploiter, avec probabilité ε explorer aléatoirement", "Toujours explorer", "Choisir au hasard parmi 2 actions"], correct: 1, exp: "ε-greedy gère le dilemme exploration/exploitation. ε diminue typiquement avec le temps." },
+    en: { q: "What does ε-greedy do?", opts: ["Always exploit", "With prob 1-ε exploit, with prob ε explore", "Always explore", "Random among 2 actions"], correct: 1, exp: "ε-greedy handles exploration/exploitation tradeoff." }
+  },
+  { topic: "cnn", topicFr: "CNN", topicEn: "CNN",
+    fr: { q: "Formule de la taille de sortie d'une convolution 2D ?", opts: ["H × W", "H + 2P − K", "⌊(H + 2P − K) / S⌋ + 1", "K × S"], correct: 2, exp: "À connaître par cœur ! H=hauteur, P=padding, K=taille kernel, S=stride." },
+    en: { q: "Output size formula for 2D convolution?", opts: ["H × W", "H + 2P − K", "⌊(H + 2P − K) / S⌋ + 1", "K × S"], correct: 2, exp: "Must know by heart!" }
+  },
+  { topic: "cnn",
+    fr: { q: "Input 32×32, kernel 3×3, padding=0, stride=1. Taille de sortie ?", opts: ["32×32", "30×30", "29×29", "34×34"], correct: 1, exp: "(32 + 0 - 3)/1 + 1 = 30. Donc 30×30." },
+    en: { q: "Input 32×32, kernel 3×3, padding=0, stride=1. Output size?", opts: ["32×32", "30×30", "29×29", "34×34"], correct: 1, exp: "(32 + 0 - 3)/1 + 1 = 30. So 30×30." }
+  },
+  { topic: "cnn",
+    fr: { q: "Combien de paramètres pour une couche Conv-32 (kernel 3×3) avec 16 canaux d'entrée ?", opts: ["32 × 3 × 3 + 32 = 320", "32 × (3·3·16) + 32 = 4640", "32 × 16 = 512", "3 × 3 × 32 = 288"], correct: 1, exp: "Formule : K filtres × (F·F·Cin) + K biais." },
+    en: { q: "Parameters for Conv-32 (3×3 kernel) with 16 input channels?", opts: ["320", "4640", "512", "288"], correct: 1, exp: "Formula: K filters × (F·F·Cin) + K biases." }
+  },
+  { topic: "cnn",
+    fr: { q: "Pourquoi préférer max-pooling à average pooling pour la classification d'images ?", opts: ["C'est plus rapide", "Il conserve les activations saillantes et est robuste aux petites translations", "Il a moins de paramètres", "Il est mathématiquement plus simple"], correct: 1, exp: "Max-pooling préserve les motifs saillants. Average diluerait les signaux importants." },
+    en: { q: "Why prefer max-pooling over average pooling?", opts: ["Faster", "Preserves salient activations, robust to small translations", "Fewer parameters", "Mathematically simpler"], correct: 1, exp: "Max-pooling preserves salient features." }
+  },
+  { topic: "cnn",
+    fr: { q: "Que fait le Global Average Pooling (GAP) ?", opts: ["Calcule la moyenne globale du dataset", "Réduit chaque feature map à sa moyenne (un scalaire par canal)", "Augmente la taille spatiale", "Applique une convolution 1×1"], correct: 1, exp: "GAP réduit une feature map H×W×C en un vecteur de C nombres. Zéro paramètre, idéal pour petits modèles." },
+    en: { q: "What does Global Average Pooling do?", opts: ["Computes global dataset mean", "Reduces each feature map to its mean (one scalar per channel)", "Increases spatial size", "Applies 1×1 convolution"], correct: 1, exp: "GAP reduces H×W×C feature map to a C-vector. Zero parameters." }
+  },
+  { topic: "metrics", topicFr: "Métriques", topicEn: "Metrics",
+    fr: { q: "Que mesure R² ?", opts: ["L'erreur en dollars", "La proportion de variance de Y expliquée par le modèle", "Le nombre de paramètres", "La rapidité d'entraînement"], correct: 1, exp: "R² varie de 0 à 1. R² = 0.93 signifie que le modèle explique 93% des variations de Y." },
+    en: { q: "What does R² measure?", opts: ["Error in dollars", "Proportion of Y variance explained by the model", "Number of parameters", "Training speed"], correct: 1, exp: "R² ranges 0 to 1. R² = 0.93 means model explains 93% of Y variations." }
+  },
+  { topic: "metrics",
+    fr: { q: "Quelle est la différence entre MAE et RMSE ?", opts: ["RMSE = racine carrée de MSE, plus sensible aux grosses erreurs que MAE", "Ce sont les mêmes", "MAE inclut le R²", "RMSE est pour la classification"], correct: 0, exp: "MAE = moyenne des |erreurs|. MSE = moyenne des erreurs². RMSE = √MSE." },
+    en: { q: "Difference between MAE and RMSE?", opts: ["RMSE = sqrt(MSE), more sensitive to large errors than MAE", "Same thing", "MAE includes R²", "RMSE is for classification"], correct: 0, exp: "MAE = mean of |errors|. MSE = mean of errors². RMSE = √MSE." }
+  },
+  { topic: "metrics",
+    fr: { q: "Qu'est-ce que la cross-validation à K plis ?", opts: ["Diviser le test en K parties", "Diviser le training en K plis, entraîner sur K-1 et tester sur 1, tourner", "Multiplier les données par K", "Une forme d'ensemble learning"], correct: 1, exp: "Cross-validation donne une mesure plus robuste qu'un seul split. Crucial avec petits datasets." },
+    en: { q: "What is K-fold cross-validation?", opts: ["Split test in K parts", "Split training in K folds, train on K-1, test on 1, rotate", "Multiply data by K", "Ensemble learning"], correct: 1, exp: "More robust than single split. Crucial for small datasets." }
+  },
+  { topic: "metrics",
+    fr: { q: "Qu'est-ce que le compromis biais-variance ?", opts: ["Une métrique de classification", "Un modèle simple a fort biais/faible variance, un modèle complexe l'inverse", "Le rapport signal/bruit", "Une régularisation"], correct: 1, exp: "Concept fondamental. L'optimum d'erreur de généralisation se situe entre les deux extrêmes." },
+    en: { q: "What is the bias-variance tradeoff?", opts: ["A classification metric", "Simple model = high bias/low variance, complex = opposite", "Signal-to-noise ratio", "A regularization"], correct: 1, exp: "Fundamental concept. Optimal generalization error sits between extremes." }
+  },
+  { topic: "fundamentals",
+    fr: { q: "Quelle technique de révision est la plus efficace selon les méta-analyses ?", opts: ["La relecture passive", "Le surlignage", "L'auto-test (active recall)", "La recopie de notes"], correct: 2, exp: "L'auto-test, valider par Dunlosky et al. 2013, est largement plus efficace que la relecture passive." },
+    en: { q: "Most efficient revision technique per meta-analyses?", opts: ["Passive rereading", "Highlighting", "Active recall (self-testing)", "Copying notes"], correct: 2, exp: "Active recall, validated by Dunlosky et al. 2013, far outperforms passive rereading." }
+  }
+];
+
+// ============================================================
+// STATE & PERSISTENCE
+// ============================================================
+let state = {
+  lang: localStorage.getItem('lang') || 'fr',
+  currentSection: localStorage.getItem('currentSection') || 'overview',
+  doneSections: JSON.parse(localStorage.getItem('doneSections') || '[]'),
+  examDate: localStorage.getItem('examDate') || '2026-07-05',
+  quizCurrent: 0,
+  quizTopicFilter: 'all',
+  quizAnswers: JSON.parse(localStorage.getItem('quizAnswers') || '{}')
+};
+
+function save() {
+  localStorage.setItem('lang', state.lang);
+  localStorage.setItem('currentSection', state.currentSection);
+  localStorage.setItem('doneSections', JSON.stringify(state.doneSections));
+  localStorage.setItem('examDate', state.examDate);
+  localStorage.setItem('quizAnswers', JSON.stringify(state.quizAnswers));
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function setLang(lang) {
+  state.lang = lang; save();
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T[lang][el.dataset.i18n]; });
+  renderNav(); renderContent(); renderCountdown();
+}
+
+function renderCountdown() {
+  const target = new Date(state.examDate + 'T00:00:00');
+  const now = new Date();
+  const diff = target - now;
+  const days = Math.floor(diff / 86400000);
+  const el = document.getElementById('cd-val');
+  if (days >= 0) {
+    el.textContent = days + ' ' + T[state.lang].days;
+    el.style.color = days < 7 ? '#FF6B6B' : days < 14 ? '#FFD700' : '#90EE90';
+  } else {
+    el.textContent = state.lang === 'fr' ? 'Date dépassée' : 'Date passed';
+    el.style.color = '#FF6B6B';
+  }
+}
+
+function renderNav() {
+  const list = document.getElementById('nav-list');
+  list.innerHTML = SECTIONS.map(s => {
+    const isDone = state.doneSections.includes(s.id);
+    const isActive = state.currentSection === s.id;
+    const t = s[state.lang].title;
+    const pri = s.priority ? `<span class="priority-tag">${T[state.lang].priority}</span>` : '';
+    return `<li class="nav-item ${isActive ? 'active' : ''} ${isDone ? 'done' : ''} ${s.priority ? 'priority' : ''}" onclick="goTo('${s.id}')">
+      <span class="check">${isDone ? '✓' : ''}</span>
+      <span>${s.icon} ${t}${pri}</span>
+    </li>`;
+  }).join('');
+
+  const pct = Math.round((state.doneSections.length / SECTIONS.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = pct + '%';
+}
+
+function goTo(id) {
+  state.currentSection = id; save();
+  renderNav(); renderContent();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleDone(id) {
+  const idx = state.doneSections.indexOf(id);
+  if (idx >= 0) state.doneSections.splice(idx, 1);
+  else state.doneSections.push(id);
+  save(); renderNav(); renderContent();
+}
+
+function renderContent() {
+  const section = SECTIONS.find(s => s.id === state.currentSection);
+  if (!section) return;
+  const t = section[state.lang];
+  const isDone = state.doneSections.includes(section.id);
+  const doneLabel = isDone ? T[state.lang].isDone : T[state.lang].markDone;
+  const html = `
+    <h1>${section.icon} ${t.title}</h1>
+    <p class="subtitle">${t.subtitle}</p>
+    ${t.content}
+    ${section.id !== 'quiz' ? `<button class="mark-done-btn ${isDone ? 'done' : ''}" onclick="toggleDone('${section.id}')">${doneLabel}</button>` : ''}
+  `;
+  document.getElementById('content').innerHTML = html;
+  if (section.id === 'quiz') renderQuiz();
+}
+
+// ============================================================
+// QUIZ MODULE
+// ============================================================
+function renderQuiz() {
+  const app = document.getElementById('quiz-app');
+  const topics = [...new Set(QUIZZES.map(q => q.topic))];
+
+  const filtered = state.quizTopicFilter === 'all' ? QUIZZES : QUIZZES.filter(q => q.topic === state.quizTopicFilter);
+  if (state.quizCurrent >= filtered.length) state.quizCurrent = 0;
+  const q = filtered[state.quizCurrent];
+  if (!q) { app.innerHTML = '<p>Pas de question pour ce thème.</p>'; return; }
+  const qKey = QUIZZES.indexOf(q);
+  const ans = state.quizAnswers[qKey];
+  const correctScore = Object.entries(state.quizAnswers).filter(([k,v]) => v === QUIZZES[k][state.lang].correct).length;
+
+  let topicLabels = { all: T[state.lang].all };
+  topics.forEach(tp => {
+    const qWithLabel = QUIZZES.find(qq => qq.topic === tp);
+    topicLabels[tp] = qWithLabel['topic' + state.lang.charAt(0).toUpperCase() + state.lang.slice(1)] || tp;
+  });
+
+  const filterButtons = ['all', ...topics].map(tp => `
+    <button class="filter-btn ${state.quizTopicFilter === tp ? 'active' : ''}" onclick="setQuizFilter('${tp}')">${topicLabels[tp]}</button>
+  `).join('');
+
+  const qData = q[state.lang];
+  const optsHtml = qData.opts.map((o, i) => {
+    let cls = '';
+    if (ans !== undefined) {
+      if (i === qData.correct) cls = 'correct';
+      else if (i === ans) cls = 'wrong';
+    }
+    return `<button class="quiz-option ${cls}" onclick="answerQuiz(${qKey}, ${i})">${o}</button>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">${correctScore} / ${Object.keys(state.quizAnswers).length || 0}</div><div class="stat-label">${T[state.lang].quizScore}</div></div>
+      <div class="stat-card"><div class="stat-num">${filtered.length}</div><div class="stat-label">${state.lang === 'fr' ? 'Questions' : 'Questions'}</div></div>
+      <div class="stat-card"><div class="stat-num">${state.quizCurrent + 1}</div><div class="stat-label">${state.lang === 'fr' ? 'Actuelle' : 'Current'}</div></div>
+    </div>
+    <div class="quiz-filters">${filterButtons}</div>
+    <div class="quiz-question">
+      <div class="q-text">Q${state.quizCurrent + 1}. ${qData.q}</div>
+      <div class="quiz-options">${optsHtml}</div>
+      <div class="quiz-explanation ${ans !== undefined ? 'visible' : ''}">
+        <strong>${ans === qData.correct ? '✓ ' + (state.lang === 'fr' ? 'Bonne réponse !' : 'Correct!') : '✗ ' + (state.lang === 'fr' ? 'Mauvaise réponse.' : 'Incorrect.')}</strong> ${qData.exp}
+      </div>
+    </div>
+    <div class="quiz-controls">
+      <button class="btn btn-secondary" onclick="prevQuiz()">← ${T[state.lang].prevQ}</button>
+      <button class="btn btn-primary" onclick="nextQuiz()">${T[state.lang].nextQ} →</button>
+    </div>
+    <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="resetQuiz()">↻ ${T[state.lang].resetQuiz}</button>
+  `;
+}
+
+function setQuizFilter(tp) { state.quizTopicFilter = tp; state.quizCurrent = 0; renderQuiz(); }
+function answerQuiz(qKey, idx) { state.quizAnswers[qKey] = idx; save(); renderQuiz(); }
+function nextQuiz() {
+  const filtered = state.quizTopicFilter === 'all' ? QUIZZES : QUIZZES.filter(q => q.topic === state.quizTopicFilter);
+  state.quizCurrent = (state.quizCurrent + 1) % filtered.length;
+  renderQuiz();
+}
+function prevQuiz() {
+  const filtered = state.quizTopicFilter === 'all' ? QUIZZES : QUIZZES.filter(q => q.topic === state.quizTopicFilter);
+  state.quizCurrent = (state.quizCurrent - 1 + filtered.length) % filtered.length;
+  renderQuiz();
+}
+function resetQuiz() {
+  if (!confirm(state.lang === 'fr' ? 'Recommencer le quiz ?' : 'Restart quiz?')) return;
+  state.quizAnswers = {}; state.quizCurrent = 0; save(); renderQuiz();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('exam-date').value = state.examDate;
+document.getElementById('exam-date').addEventListener('change', e => {
+  state.examDate = e.target.value; save(); renderCountdown();
+});
+
+setLang(state.lang);
+setInterval(renderCountdown, 60000); // refresh every minute
+</script>
+</body>
+</html>
