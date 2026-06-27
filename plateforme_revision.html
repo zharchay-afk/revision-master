@@ -499,6 +499,7 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
   background: var(--card); border-radius: var(--radius); padding: 2rem;
   max-width: 500px; width: 100%; box-shadow: var(--shadow-strong);
   border: 2px solid var(--border);
+  max-height: 90vh; overflow-y: auto;
 }
 .modal h2 { color: var(--accent); margin-bottom: 1rem; }
 .modal-row { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px dashed var(--border); }
@@ -575,16 +576,57 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
 .plan-row:last-child { border-bottom: none; }
 .plan-action { font-size: 0.85rem; color: var(--text-soft); }
 
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 700px) {
-  .mascot-banner { grid-template-columns: 80px 1fr; }
-  .mascot { width: 80px; height: 80px; }
-  .mascot svg { width: 60px; height: 60px; }
+/* ---------- RESPONSIVE (MOBILE) ---------- */
+@media (max-width: 760px) {
+  /* Header : plus compact, retour à la ligne propre */
+  header { padding: 0.6rem 0.9rem; }
+  .header-inner { gap: 0.5rem 0.6rem; }
+  .brand { font-size: 0.95rem; }
+  .brand small { font-size: 0.66rem; }
+  .header-nav { gap: 0.2rem; }
+  .nav-btn { padding: 0.45rem 0.6rem; font-size: 0.8rem; }
+  .header-stats { font-size: 0.8rem; gap: 0.4rem; }
+  .stat-pill { padding: 0.3rem 0.55rem; }
+  .header-actions { gap: 0.25rem; }
+
+  /* Conteneur principal */
+  main { padding: 1rem 0.9rem; }
+  .section-title { font-size: 1.05rem; }
+
+  /* Grilles : une seule colonne */
+  .subject-grid, .chapter-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+  .subject-card { padding: 1.2rem; }
+  .subject-card h3 { font-size: 1.1rem; }
+
+  /* Contenu des cours */
+  .content-card { padding: 1.1rem; overflow-wrap: break-word; }
+  .content-card h1 { font-size: 1.4rem; }
+  .content-card h2 { font-size: 1.15rem; }
+
+  /* Onglets Cours/Flashcards/Quiz : défilement horizontal */
+  .mode-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mode-tab { flex: 0 0 auto; padding: 0.5rem 0.85rem; font-size: 0.84rem; }
+
+  /* Boutons de navigation entre sections : empilés, pleine largeur */
+  .chapter-nav-bar { flex-direction: column; }
+  .chapter-nav-bar .action-btn { min-width: 0; width: 100%; justify-content: center; }
+
+  /* Modal (paramètres) : champs et boutons empilés, pleine largeur */
+  .modal { padding: 1.3rem; }
+  .modal-row { flex-direction: column; align-items: stretch; gap: 0.4rem; }
+  .modal-row .action-btn { width: 100%; justify-content: center; }
+  .modal-row input[type="date"], .modal-row input[type="text"], .modal-row input[type="file"] { width: 100%; }
+
+  /* Flashcards */
+  .flashcard-face { padding: 1.3rem; }
+  .flashcard-face .fc-content { font-size: 1rem; }
+
+  /* Bannière mascotte / XP */
+  .mascot-banner { grid-template-columns: 64px 1fr; }
+  .mascot { width: 64px; height: 64px; }
+  .mascot svg { width: 48px; height: 48px; }
   .xp-block { grid-column: 1 / -1; text-align: left; }
   .xp-bar { width: 100%; }
-  .content-card { padding: 1.2rem; }
-  .header-stats { font-size: 0.8rem; }
-  .stat-pill { padding: 0.3rem 0.6rem; }
 }
 
 /* ---------- PRINT STYLES (PDF EXPORT FICHES) ---------- */
@@ -1713,7 +1755,7 @@ function placeholderChapter() {
 COURSES.nosql = {
   id: 'nosql',
   code: 'BD71',
-  title: { fr: 'Big Data', en: 'Big Data' },
+  title: { fr: 'Big data (no sql)', en: 'Big data (no sql)' },
   subtitle: { fr: 'BD71 — Big Data, NoSQL & Neo4j (Dr. Kas) · QCM final', en: 'BD71 — Big Data, NoSQL & Neo4j · Final MCQ' },
   emoji: '🗄️',
   color: '#38A169',
