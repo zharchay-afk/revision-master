@@ -123,6 +123,14 @@ header {
   transition: all .15s;
 }
 .icon-btn:hover { background: var(--border); color: var(--text); }
+.account-btn {
+  background: var(--accent); color: #fff; border: 1px solid var(--accent);
+  height: 34px; padding: 0 0.8rem; border-radius: var(--radius-sm);
+  cursor: pointer; font-weight: 700; font-size: 0.84rem;
+  display: inline-flex; align-items: center; gap: 0.35rem; transition: all .15s;
+}
+.account-btn:hover { filter: brightness(1.05); }
+.account-btn.connected { background: var(--bg-2); color: var(--leaf); border-color: var(--leaf); }
 .lang-toggle { display: flex; gap: 0.15rem; background: var(--bg-2); padding: 0.18rem; border-radius: var(--radius-sm); border: 1px solid var(--border); }
 .lang-btn {
   background: transparent;
@@ -655,11 +663,11 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
       <button class="nav-btn" id="navPlan" onclick="navigate('plan')">🎯 <span id="t_nav_plan">Plan</span></button>
     </div>
     <div class="header-stats">
-      <div class="stat-pill warm" title="Jours d'affilée"><span>🔥</span><strong id="streakHeader">0</strong></div>
-      <div class="stat-pill" title="Expérience accumulée"><span>⭐</span><strong id="xpHeader">0</strong> XP</div>
-      <span id="examCountdown" style="display:none"></span>
+      <div class="stat-pill" title="Chapitres révisés, toutes matières confondues"><span>✅</span> <strong id="progressHeader">0/0</strong></div>
+      <div class="stat-pill danger" title="Jours avant le prochain examen"><span>⏳</span> <strong id="examCountdown">—</strong></div>
     </div>
     <div class="header-actions">
+      <button class="account-btn" id="accountBtn" onclick="openSettings()" title="Connexion / synchronisation cloud">👤 <span>Se connecter</span></button>
       <div class="lang-toggle">
         <button class="lang-btn active" onclick="setLang('fr')" id="langFr">FR</button>
         <button class="lang-btn" onclick="setLang('en')" id="langEn">EN</button>
@@ -1195,14 +1203,31 @@ function shuffle(arr) {
 }
 
 /* ---------- HEADER STATS ---------- */
+function examDaysLeft() {
+  if (!STATE.examDate) return null;
+  // Réutilise daysFromToday (parse en date locale) pour rester cohérent avec les cartes
+  if (typeof daysFromToday === 'function') return daysFromToday(STATE.examDate);
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((new Date(STATE.examDate) - today) / 86400000);
+}
 function updateHeaderStats() {
-  document.getElementById('examCountdown').textContent = daysToExam();
-  document.getElementById('streakHeader').textContent = STATE.streak;
-  document.getElementById('xpHeader').textContent = STATE.xp;
+  // Compte à rebours jusqu'à la date d'examen (modifiable dans les Paramètres)
+  const ec = document.getElementById('examCountdown');
+  if (ec) {
+    const d = examDaysLeft();
+    ec.textContent = (d === null) ? '—' : (d < 0 ? '✓' : (d === 0 ? (STATE.lang==='fr'?"Auj.":'Today') : 'J-' + d));
+  }
+  // Progression réelle : chapitres révisés / total, toutes matières
+  const ph = document.getElementById('progressHeader');
+  if (ph && typeof COURSES !== 'undefined') {
+    const all = Object.values(COURSES).flatMap(c => c.chapters.map(ch => c.id + '_' + ch.id));
+    const read = all.filter(k => STATE.progress[k]?.read).length;
+    ph.textContent = read + '/' + all.length;
+  }
 }
 
 /* ---------- RENDER (will be implemented after COURSES is loaded) ---------- */
-function refreshUI() { render(); updateHeaderStats(); }
+function refreshUI() { render(); updateHeaderStats(); if (typeof updateFbUI === 'function') updateFbUI(); }
 function render() { /* defined after COURSES */ }
 
 /* ============================================================
@@ -4867,10 +4892,23 @@ function googleSignInBtn(label){
   return '<button class="action-btn" onclick="fbSignIn()" style="background:#fff;color:#3c4043;border:1px solid #dadce0;box-shadow:var(--shadow);font-weight:600;">'+GOOGLE_G_SVG+' '+label+'</button>';
 }
 function updateFbUI(){
+  const fr = STATE.lang==='fr';
+  // Bouton de connexion dans l'en-tête (rend la connexion visible)
+  const acc = document.getElementById('accountBtn');
+  if (acc){
+    if (fbReady()){
+      acc.classList.add('connected');
+      acc.innerHTML = '✅ <span>'+(fr?'Connecté':'Signed in')+'</span>';
+      acc.title = (fr?'Connecté : ':'Signed in: ')+(_fb.user.email||'');
+    } else {
+      acc.classList.remove('connected');
+      acc.innerHTML = '👤 <span>'+(fr?'Se connecter':'Sign in')+'</span>';
+      acc.title = fr?'Connexion / synchronisation cloud':'Sign in / cloud sync';
+    }
+  }
   const el = document.getElementById('fbStatus');
   const ctrl = document.getElementById('fbControls');
   if (!el) return;
-  const fr = STATE.lang==='fr';
   if (fbReady()){
     const who = _fb.user.email || ('uid '+String(_fb.user.uid).slice(0,6));
     el.innerHTML = '<span style="color:var(--leaf,#38a169); font-weight:700;">✅ '+(fr?'Connecté':'Signed in')+'</span> — '+who;
