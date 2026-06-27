@@ -645,15 +645,14 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
       <label>URL de la plateforme en ligne (optionnel, ex. GitHub Pages)</label>
       <input type="text" id="siteURLInput" placeholder="https://moncompte.github.io/revision/plateforme_revision.html" onchange="updateSiteURL(this.value)" style="font-size:0.82rem;">
     </div>
-    <div class="modal-row">
-      <label>☁️ Synchronisation cloud (Firebase)</label>
-      <div id="fbStatus" style="font-size:0.82rem; color:var(--text-soft);">—</div>
-      <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-        <button class="action-btn" onclick="fbSignIn()">🔵 Se connecter avec Google</button>
-      </div>
-      <details style="margin-top:0.6rem;">
-        <summary style="cursor:pointer; font-size:0.85rem;">Configurer mon projet Firebase</summary>
-        <p style="font-size:0.78rem; color:var(--text-soft); margin:0.5rem 0;">Colle ici l'objet de configuration de ton projet Firebase (Console Firebase → Paramètres du projet → tes applications → Config) :</p>
+    <div class="modal-row" style="flex-direction:column; align-items:stretch; gap:0.55rem;">
+      <label>☁️ <span id="t_fb_title">Synchronisation cloud — retrouve ta progression sur tous tes appareils</span></label>
+      <p id="t_fb_desc" style="font-size:0.8rem; color:var(--text-soft); margin:0;">Connecte-toi avec ton compte Google pour sauvegarder automatiquement ta progression en ligne et la restaurer sur ton téléphone, ta tablette ou un autre ordinateur.</p>
+      <div id="fbStatus" style="font-size:0.85rem;">—</div>
+      <div id="fbControls" style="display:flex; gap:0.5rem; flex-wrap:wrap;"></div>
+      <details style="margin-top:0.2rem;">
+        <summary style="cursor:pointer; font-size:0.82rem; color:var(--text-soft);">⚙️ Configurer un autre projet Firebase (avancé)</summary>
+        <p style="font-size:0.78rem; color:var(--text-soft); margin:0.5rem 0;">La synchronisation est déjà préconfigurée. Pour utiliser ton propre projet, colle ici sa configuration (Console Firebase → Paramètres du projet → tes applications → Config) :</p>
         <textarea id="fbConfigInput" rows="6" style="width:100%; font-size:0.72rem; font-family:monospace;" placeholder='{ "apiKey": "...", "authDomain": "ton-projet.firebaseapp.com", "projectId": "ton-projet", "storageBucket": "...", "messagingSenderId": "...", "appId": "..." }'></textarea>
         <button class="action-btn secondary" style="margin-top:0.4rem;" onclick="saveFbConfig(document.getElementById('fbConfigInput').value)">💾 Enregistrer la config</button>
       </details>
@@ -689,6 +688,16 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* Config Firebase par défaut — injectée automatiquement */
+(function(){
+  try {
+    if (!localStorage.getItem('fb_config')) {
+      localStorage.setItem('fb_config', '{"apiKey":"AIzaSyB8uJ-tFlBS7ffekK-q-CEAcvC2BFKO1io","authDomain":"revision-master-7787.firebaseapp.com","projectId":"revision-master-7787","storageBucket":"revision-master-7787.firebasestorage.app","messagingSenderId":"189729122648","appId":"1:189729122648:web:d80835226fbc32aa219d2d"}');
+    }
+  } catch(e){}
+})();
+</script>
 <script>
 /* ============================================================
    FOXLEARN — MOTEUR JAVASCRIPT
@@ -4811,15 +4820,30 @@ function fbLoad(){
     updateFbUI();
   }).catch(e => console.warn('fbLoad', e));
 }
+const GOOGLE_G_SVG = '<svg width="18" height="18" viewBox="0 0 48 48" style="flex:none;" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+function googleSignInBtn(label){
+  return '<button class="action-btn" onclick="fbSignIn()" style="background:#fff;color:#3c4043;border:1px solid #dadce0;box-shadow:var(--shadow);font-weight:600;">'+GOOGLE_G_SVG+' '+label+'</button>';
+}
 function updateFbUI(){
-  const el = document.getElementById('fbStatus'); if (!el) return;
+  const el = document.getElementById('fbStatus');
+  const ctrl = document.getElementById('fbControls');
+  if (!el) return;
+  const fr = STATE.lang==='fr';
   if (fbReady()){
     const who = _fb.user.email || ('uid '+String(_fb.user.uid).slice(0,6));
-    el.innerHTML = (STATE.lang==='fr'?'✅ Connecté : ':'✅ Signed in: ')+who+' — <a onclick="fbSignOut()" style="cursor:pointer;text-decoration:underline">'+(STATE.lang==='fr'?'se déconnecter':'sign out')+'</a>';
+    el.innerHTML = '<span style="color:var(--leaf,#38a169); font-weight:700;">✅ '+(fr?'Connecté':'Signed in')+'</span> — '+who;
+    if (ctrl) ctrl.innerHTML = '<button class="action-btn secondary" onclick="fbSignOut()">🚪 '+(fr?'Se déconnecter':'Sign out')+'</button>';
   } else if (fbConfig()){
-    el.textContent = (typeof firebase==='undefined') ? (STATE.lang==='fr'?'SDK non chargé (besoin d\'internet).':'SDK not loaded (needs internet).') : (STATE.lang==='fr'?'Config OK — clique « Se connecter avec Google ».':'Config OK — click sign in.');
+    if (typeof firebase==='undefined'){
+      el.textContent = fr?'⚠️ Hors ligne : connexion impossible (vérifie ton accès internet).':'⚠️ Offline: cannot sign in (check your internet).';
+      if (ctrl) ctrl.innerHTML = '';
+    } else {
+      el.innerHTML = '<span style="color:var(--text-soft);">'+(fr?'Non connecté — clique ci-dessous pour synchroniser :':'Not signed in — click below to sync:')+'</span>';
+      if (ctrl) ctrl.innerHTML = googleSignInBtn(fr?'Se connecter avec Google':'Sign in with Google');
+    }
   } else {
-    el.textContent = STATE.lang==='fr'?'Non configuré (colle ta config Firebase ci-dessous).':'Not configured.';
+    el.textContent = fr?'Non configuré (voir « Configurer un projet Firebase » ci-dessous).':'Not configured (see "Configure a Firebase project" below).';
+    if (ctrl) ctrl.innerHTML = '';
   }
 }
 
