@@ -1003,8 +1003,22 @@ function isDue(cardId) {
 
 /* ---------- ROUTER ---------- */
 let CURRENT_VIEW = { page: 'home', course: null, chapter: null, mode: 'lesson' };
+function viewToHash(v) {
+  if (v.page === 'course')  return 'course/' + v.course;
+  if (v.page === 'chapter') return 'chapter/' + v.course + '/' + v.chapter + (v.mode && v.mode !== 'lesson' ? '/' + v.mode : '');
+  if (v.page === 'calendar') return 'calendar';
+  if (v.page === 'plan')     return 'plan';
+  return ''; // home
+}
 function navigate(page, course = null, chapter = null, mode = 'lesson') {
   CURRENT_VIEW = { page, course, chapter, mode };
+  // Sync the URL hash so the browser Back/Forward buttons work.
+  // We set CURRENT_VIEW *before* changing the hash: the resulting hashchange
+  // event sees the view already applied and skips re-rendering (see handleHash).
+  const newHash = viewToHash(CURRENT_VIEW);
+  if (((location.hash || '').replace(/^#/, '')) !== newHash) {
+    location.hash = newHash;
+  }
   window.scrollTo(0, 0);
   render();
 }
@@ -4088,7 +4102,7 @@ function renderChapter(app) {
   else if (mode === 'quiz') renderQuiz(ch);
 }
 
-function setMode(m) { CURRENT_VIEW.mode = m; render(); }
+function setMode(m) { navigate('chapter', CURRENT_VIEW.course, CURRENT_VIEW.chapter, m); }
 
 function renderLesson(ch) {
   const view = document.getElementById('modeView');
@@ -4726,13 +4740,28 @@ function exportICS(){
   a.href = url; a.download = 'revisions_foxlearn.ics'; a.click(); URL.revokeObjectURL(url);
   toast(STATE.lang==='fr'?('📅 '+revs.length+' séances exportées — importe le .ics dans Google Agenda'):('📅 '+revs.length+' sessions exported — import the .ics into Google Calendar'));
 }
+function hashToView(h){
+  const p = (h||'').split('/');
+  if (p[0]==='course'  && COURSES[p[1]]) return { page:'course',  course:p[1], chapter:null,        mode:'lesson' };
+  if (p[0]==='chapter' && COURSES[p[1]]) return { page:'chapter', course:p[1], chapter:p[2]||null,  mode:p[3]||'lesson' };
+  if (p[0]==='calendar') return { page:'calendar', course:null, chapter:null, mode:'lesson' };
+  if (p[0]==='plan')     return { page:'plan',     course:null, chapter:null, mode:'lesson' };
+  return { page:'home', course:null, chapter:null, mode:'lesson' };
+}
+function sameView(a, b){
+  return a.page===b.page && a.course===b.course && a.chapter===b.chapter && a.mode===b.mode;
+}
 function handleHash(){
   const h = (location.hash||'').replace(/^#/,'');
-  if (!h) return false;
-  const p = h.split('/');
-  if (p[0]==='course' && COURSES[p[1]]) { navigate('course', p[1]); return true; }
-  if (p[0]==='chapter' && COURSES[p[1]]) { navigate('chapter', p[1], p[2]||null, 'lesson'); return true; }
-  return false;
+  const target = hashToView(h);
+  // If the view is already applied (e.g. hashchange triggered by our own
+  // navigate()), do nothing — this avoids a double render and any loop.
+  // On a real Back/Forward, target differs from CURRENT_VIEW and we apply it.
+  if (sameView(target, CURRENT_VIEW)) return true;
+  CURRENT_VIEW = target;
+  window.scrollTo(0, 0);
+  render();
+  return true;
 }
 
 /* ============================================================
