@@ -768,6 +768,8 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
   </div>
 </div>
 
+<div id="pomoFloat" onclick="openFocus()" title="Session en cours — clique pour ouvrir le Mode focus" style="display:none; position:fixed; bottom:16px; right:16px; z-index:90; background:var(--accent); color:#fff; padding:0.5rem 0.95rem; border-radius:999px; box-shadow:var(--shadow-strong); cursor:pointer; font-weight:800; align-items:center; gap:0.4rem; font-size:1.05rem;"><span id="pomoFloatEmoji">🍅</span> <span id="pomoFloatTime">25:00</span></div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1789,6 +1791,7 @@ COURSES.ml = {
 function placeholderChapter() {
   return {
     id: 'overview',
+    placeholder: true,
     title: { fr: '📋 À venir — envoie les PDF du cours', en: '📋 Coming soon — upload course PDFs' },
     summary: { fr: 'Structure prête à recevoir le contenu.', en: 'Structure ready to receive content.' },
     priority: false,
@@ -4032,9 +4035,40 @@ function courseNavButton(c) {
   return `<div style="margin-top:1rem; text-align:center;"><button class="action-btn" onclick="navigate('course','${nc.id}')">${STATE.lang==='fr'?'Cours suivant':'Next course'} : ${nc.emoji} ${L(nc.title)} →</button></div>`;
 }
 
+/* ---------- "Lance ma session" : choisit 1 chapitre + démarre le Pomodoro ---------- */
+function pickNextChapter() {
+  const realChapters = c => (c.chapters || []).filter(ch => !ch.placeholder);
+  const courses = Object.values(COURSES).filter(c => (c.unlocked !== false) && realChapters(c).length);
+  courses.sort((a, b) => (a.examDate ? new Date(a.examDate) : 8.64e15) - (b.examDate ? new Date(b.examDate) : 8.64e15));
+  // 1) premier chapitre non terminé de la matière dont l'examen est le plus proche
+  for (const c of courses) {
+    const ch = realChapters(c).find(ch => !STATE.progress[c.id + '_' + ch.id]?.read);
+    if (ch) return { c, ch };
+  }
+  // 2) tout est terminé → on révise le 1er chapitre de la matière la plus proche
+  if (courses.length) return { c: courses[0], ch: realChapters(courses[0])[0] };
+  return null;
+}
+function startSession() {
+  const pick = pickNextChapter();
+  if (!pick) { toast(STATE.lang==='fr' ? 'Aucun chapitre disponible.' : 'No chapter available.'); return; }
+  navigate('chapter', pick.c.id, pick.ch.id, 'lesson');
+  if (typeof window.pomoStart === 'function') window.pomoStart();
+  toast((STATE.lang==='fr' ? '🚀 C\'est parti — ' : '🚀 Let\'s go — ') + L(pick.ch.title) + ' · 🍅 25 min', 'success');
+}
+
 function renderHome(app) {
   const lvl = levelInfo();
   let earnedBadges = BADGES.filter(b => STATE.badges[b.id]);
+  const pick = pickNextChapter();
+  const sessionHero = pick ? `
+    <div style="background:linear-gradient(135deg, var(--accent), var(--accent-2, var(--accent))); color:#fff; border-radius:var(--radius); padding:1.1rem 1.3rem; margin-bottom:1.3rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; box-shadow:var(--shadow);">
+      <div>
+        <div style="font-weight:800; font-size:1.15rem;">🚀 ${STATE.lang==='fr' ? 'Prêt·e à réviser ?' : 'Ready to revise?'}</div>
+        <div style="opacity:0.92; font-size:0.88rem; margin-top:0.2rem;">${STATE.lang==='fr' ? 'Prochain' : 'Next'} : ${pick.c.emoji || ''} ${L(pick.ch.title)} · 🍅 25 min</div>
+      </div>
+      <button onclick="startSession()" style="background:#fff; color:var(--accent); border:none; border-radius:999px; padding:0.7rem 1.4rem; font-weight:800; font-size:1rem; cursor:pointer; box-shadow:var(--shadow); white-space:nowrap;">${STATE.lang==='fr' ? 'Lance ma session ▶' : 'Start my session ▶'}</button>
+    </div>` : '';
 
   // Stats globales
   const allChapters = Object.values(COURSES).flatMap(c => c.chapters.map(ch => ({ courseId: c.id, ch })));
@@ -4043,6 +4077,7 @@ function renderHome(app) {
   const dueCards = allCards.filter(c => isDue(c.id)).length;
 
   app.innerHTML = `
+    ${sessionHero}
     <div class="section-title">📚 ${t('home_title')}</div>
     <div style="color:var(--muted); margin-bottom: 0.8rem; font-size: 0.9rem;">${t('home_subtitle')}</div>
     <div class="subject-grid">
@@ -5024,7 +5059,7 @@ boot();
   const POMO = { focusMin:25, breakMin:5 };
   let pomo = { phase:'idle', endAt:0, timer:null, onBreak:false };
   function fmt(ms){ const s=Math.max(0,Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
-  function tick(){ const el=document.getElementById('pomoTime'); const left=pomo.endAt-Date.now(); if(el) el.textContent=fmt(left); if(left<=0) phaseEnd(); }
+  function tick(){ const left=pomo.endAt-Date.now(); const s=fmt(left); const el=document.getElementById('pomoTime'); if(el) el.textContent=s; const ft=document.getElementById('pomoFloatTime'); if(ft) ft.textContent=s; if(left<=0) phaseEnd(); }
   function startPhase(isBreak){
     pomo.onBreak=isBreak; pomo.phase=isBreak?'break':'focus';
     pomo.endAt=Date.now()+(isBreak?POMO.breakMin:POMO.focusMin)*60000;
@@ -5098,6 +5133,8 @@ boot();
     if (nb) nb.style.display = (('Notification' in window) && Notification.permission==='granted') ? 'none' : '';
     const ps = document.getElementById('pomoStateLabel');
     if (ps) ps.textContent = pomo.phase==='focus' ? (FR()?'· 🎯 Concentration':'· 🎯 Focus') : pomo.phase==='break' ? (FR()?'· ☕ Pause':'· ☕ Break') : '';
+    const fl = document.getElementById('pomoFloat');
+    if (fl){ const active = pomo.phase==='focus' || pomo.phase==='break'; fl.style.display = active ? 'inline-flex' : 'none'; fl.style.background = pomo.phase==='break' ? 'var(--leaf)' : 'var(--accent)'; const em = document.getElementById('pomoFloatEmoji'); if (em) em.textContent = pomo.phase==='break' ? '☕' : '🍅'; }
   }
   window._updateFocusUI = updateFocusUI;
   window.openFocus = function(){ document.getElementById('focusModal').classList.add('visible'); updateFocusUI(); };
