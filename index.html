@@ -745,8 +745,8 @@ a.subject-card, a.chapter-card { text-decoration:none; color:inherit; }
       <label>⏱️ Minuteur Pomodoro <span id="pomoStateLabel" style="font-weight:500; color:var(--text-soft);"></span></label>
       <div id="pomoTime" style="font-size:2.6rem; font-weight:800; text-align:center; color:var(--accent); letter-spacing:1px;">--:--</div>
       <div style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
-        <button class="action-btn" onclick="pomoStart()">▶️ Démarrer (25 / 5 min)</button>
-        <button class="action-btn secondary" onclick="pomoStop()">⏹️ Arrêter</button>
+        <button class="action-btn" id="pomoMainBtn" onclick="pomoToggle()">▶️ Démarrer (25 / 5 min)</button>
+        <button class="action-btn secondary" id="pomoResetBtn" onclick="pomoStop()" style="display:none;">⏹️ Réinitialiser</button>
       </div>
     </div>
 
@@ -5133,7 +5133,7 @@ boot();
 
   /* ---- Pomodoro ---- */
   const POMO = { focusMin:25, breakMin:5 };
-  let pomo = { phase:'idle', endAt:0, timer:null, onBreak:false };
+  let pomo = { phase:'idle', endAt:0, timer:null, onBreak:false, remaining:0 };
   function fmt(ms){ const s=Math.max(0,Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
   function tick(){ const left=pomo.endAt-Date.now(); const s=fmt(left); const el=document.getElementById('pomoTime'); if(el) el.textContent=s; const ft=document.getElementById('pomoFloatTime'); if(ft) ft.textContent=s; if(left<=0) phaseEnd(); }
   function startPhase(isBreak){
@@ -5147,7 +5147,25 @@ boot();
     else { notify(FR()?'▶️ On reprend !':'▶️ Back to it!', FR()?'25 min de concentration':'25 min focus'); startPhase(false); }
   }
   window.pomoStart = function(){ tone(523,0.12,0.12); if(pomo.phase==='focus'||pomo.phase==='break') return; startPhase(false); };
-  window.pomoStop = function(){ clearInterval(pomo.timer); pomo.timer=null; pomo.phase='idle'; const el=document.getElementById('pomoTime'); if(el) el.textContent='--:--'; updateFocusUI(); };
+  window.pomoPause = function(){
+    if(pomo.phase!=='focus' && pomo.phase!=='break') return;
+    pomo.remaining = Math.max(0, pomo.endAt - Date.now()); // on gèle le temps restant
+    clearInterval(pomo.timer); pomo.timer=null; pomo.phase='paused';
+    const s=fmt(pomo.remaining); const el=document.getElementById('pomoTime'); if(el) el.textContent=s; const ft=document.getElementById('pomoFloatTime'); if(ft) ft.textContent=s;
+    updateFocusUI();
+  };
+  window.pomoResume = function(){
+    if(pomo.phase!=='paused') return;
+    pomo.endAt = Date.now() + (pomo.remaining||0); // on repart d'où on s'était arrêté
+    pomo.phase = pomo.onBreak ? 'break' : 'focus';
+    clearInterval(pomo.timer); pomo.timer=setInterval(tick,250); tick(); updateFocusUI();
+  };
+  window.pomoToggle = function(){
+    if(pomo.phase==='focus'||pomo.phase==='break') return window.pomoPause();
+    if(pomo.phase==='paused') return window.pomoResume();
+    return window.pomoStart();
+  };
+  window.pomoStop = function(){ clearInterval(pomo.timer); pomo.timer=null; pomo.phase='idle'; pomo.remaining=0; const el=document.getElementById('pomoTime'); if(el) el.textContent='--:--'; updateFocusUI(); };
 
   /* ---- caméra / détection de visage (MediaPipe, en local) ---- */
   let cam = { on:false, loading:false, stream:null, detector:null, video:null, timer:null, lastSeen:0, lastAlert:0 };
@@ -5208,9 +5226,14 @@ boot();
     const nb = document.getElementById('notifPermBtn');
     if (nb) nb.style.display = (('Notification' in window) && Notification.permission==='granted') ? 'none' : '';
     const ps = document.getElementById('pomoStateLabel');
-    if (ps) ps.textContent = pomo.phase==='focus' ? (FR()?'· 🎯 Concentration':'· 🎯 Focus') : pomo.phase==='break' ? (FR()?'· ☕ Pause':'· ☕ Break') : '';
+    if (ps) ps.textContent = pomo.phase==='focus' ? (FR()?'· 🎯 Concentration':'· 🎯 Focus') : pomo.phase==='break' ? (FR()?'· ☕ Pause auto':'· ☕ Break') : pomo.phase==='paused' ? (FR()?'· ⏸️ En pause':'· ⏸️ Paused') : '';
+    // Bouton principal : Démarrer / Pause / Reprendre selon l'état
+    const mb = document.getElementById('pomoMainBtn');
+    if (mb) mb.textContent = (pomo.phase==='focus'||pomo.phase==='break') ? (FR()?'⏸️ Pause':'⏸️ Pause') : pomo.phase==='paused' ? (FR()?'▶️ Reprendre':'▶️ Resume') : (FR()?'▶️ Démarrer (25 / 5 min)':'▶️ Start (25 / 5 min)');
+    const rb = document.getElementById('pomoResetBtn');
+    if (rb) rb.style.display = (pomo.phase==='idle') ? 'none' : '';
     const fl = document.getElementById('pomoFloat');
-    if (fl){ const active = pomo.phase==='focus' || pomo.phase==='break'; fl.style.display = active ? 'inline-flex' : 'none'; fl.style.background = pomo.phase==='break' ? 'var(--leaf)' : 'var(--accent)'; const em = document.getElementById('pomoFloatEmoji'); if (em) em.textContent = pomo.phase==='break' ? '☕' : '🍅'; }
+    if (fl){ const active = pomo.phase==='focus' || pomo.phase==='break' || pomo.phase==='paused'; fl.style.display = active ? 'inline-flex' : 'none'; fl.style.background = pomo.phase==='paused' ? 'var(--muted)' : (pomo.phase==='break' ? 'var(--leaf)' : 'var(--accent)'); const em = document.getElementById('pomoFloatEmoji'); if (em) em.textContent = pomo.phase==='paused' ? '⏸️' : (pomo.phase==='break' ? '☕' : '🍅'); const ft=document.getElementById('pomoFloatTime'); if(ft && pomo.phase==='paused') ft.textContent = fmt(pomo.remaining); }
   }
   window._updateFocusUI = updateFocusUI;
   window.openFocus = function(){ document.getElementById('focusModal').classList.add('visible'); updateFocusUI(); };
